@@ -1,0 +1,101 @@
+# PRINTFILM 全栈（本地构建 api / web / admin-web）。
+# 推 ACR 可用仓库根目录发布脚本；中间件用公共镜像不构建。
+# 启动：
+#   cp deploy/.env.docker.example deploy/.env.docker   # 首次
+#   docker compose --env-file deploy/.env.docker -f docker-compose.full.yml up -d --build
+name: printfilm
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-printfilm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-strong-db-password}
+      POSTGRES_DB: ${POSTGRES_DB:-printfilm}
+    volumes:
+      - printfilm_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-printfilm} -d ${POSTGRES_DB:-printfilm}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    ports:
+      - "15432:5432"
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - printfilm_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "16379:6379"
+
+  api:
+    image: printfilm-api:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - deploy/.env.docker
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-printfilm}:${POSTGRES_PASSWORD:-change-me-strong-db-password}@postgres:5432/${POSTGRES_DB:-printfilm}
+      DATABASE_URL_SYNC: postgresql+psycopg2://${POSTGRES_USER:-printfilm}:${POSTGRES_PASSWORD:-change-me-strong-db-password}@postgres:5432/${POSTGRES_DB:-printfilm}
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - printfilm_media:/app/static/generated
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=4)",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 40s
+    ports:
+      - "8000:8000"
+
+  web:
+    image: printfilm-web:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+
+  admin-web:
+    image: printfilm-admin-web:latest
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "8081:80"
+
+volumes:
+  printfilm_pgdata:
+  printfilm_redisdata:
+  printfilm_media:
