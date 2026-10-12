@@ -35,12 +35,13 @@ class Settings(BaseSettings):
     # 文字模型：开源版固定 TokenFree New API，后台选模型
     openai_api_key: str = ""
     openai_base_url: str = "https://www.tokenfree.com/v1"
-    # 默认示例为 kimi；实际以后台渠道 models + 默认定稿为准，可改为 deepseek-chat 等
-    model_llm: str = "kimi-k2.6"
-    model_image: str = "doubao-seedream-5-0-260128"
+    # 默认模型写死为 Agnes 官方 ID；配置任意 Agnes Key 即默认全走 Agnes。
+    # 想改用其它渠道（TokenFree/豆包）可在 backend/.env 或后台「模型」覆盖。
+    model_llm: str = "agnes-3.0-flash"
+    model_image: str = "agnes-image-2.5-flash"
     # Seedream 4.5 接入点（可选；未配则回退 model_image）
     model_image_45: str = ""
-    model_video: str = "doubao-seedance-2-5-260628"
+    model_video: str = "agnes-video-2.5-flash"
     # Seedance 2.0 接入点（可选；未配则仅使用 MODEL_VIDEO）
     model_video_2: str = ""
     # Seedance 2.5 官方范围约 4–30 秒

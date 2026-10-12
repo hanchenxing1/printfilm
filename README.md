@@ -88,6 +88,51 @@
 | AI | TokenFree New API（文字 / 图 / 视频） |
 | 部署 | Docker 全栈镜像，或本机三进程 + 中间件容器 |
 
+## 单机最简（Windows 双击 start_local.bat，推荐本地体验）
+
+三条能力（**文本 / 图片 / 视频**）默认全部走 **Agnes 官方 API**（`https://apihub.agnes-ai.com/v1`），模型名已写死在代码里：
+
+| 能力 | 模型 ID |
+|------|---------|
+| 文本 | `agnes-3.0-flash` |
+| 图片 | `agnes-image-2.5-flash` |
+| 视频 | `agnes-video-2.5-flash` |
+
+**你只需在个人中心填一把 Agnes Key，即可三项全通。**
+
+### 前置安装（只需一次）
+
+- Docker Desktop：<https://www.docker.com/products/docker-desktop/>
+- Python 3.12+：<https://www.python.org/downloads/>
+- Node.js 18+：<https://nodejs.org/>
+- FFmpeg（加入 PATH）：<https://ffmpeg.org/download.html>
+
+### 启动
+
+```bat
+:: 克隆仓库后，进入根目录，双击：
+start_local.bat
+```
+
+脚本自动完成：
+
+1. 检测依赖
+2. 起 Postgres（:15432）+ Redis（:16379）Docker 容器
+3. 初始化 backend venv（首次约 2-5 分钟）+ frontend / admin 依赖
+4. 启动 API（:8000）+ 用户端（:5173）+ 管理端（:5174）
+5. 自动打开浏览器 http://localhost:5173
+
+### 填 Key 出片
+
+1. 在 http://localhost:5173 注册账号并登录
+2. 进入 **个人中心 → API**
+3. 在「Agnes 视频 Key」区粘贴你的 Agnes API Key（`sk-...`），点击添加
+4. 在工具中心发一条视频生成任务，验证出片
+
+> 日志目录：`<仓库>/.local-run/`（`api.err.log`、`fe.out.log`、`admin.out.log`）
+> 想改用其它渠道（TokenFree / 豆包）：编辑 `backend/.env`，把 `MODEL_LLM` / `MODEL_IMAGE` / `MODEL_VIDEO` 改成对应模型 ID，并在「系统设置 → 模型」配对应渠道 Key。
+
+
 ## 快速开始（Docker 一键启动）
 
 本机只需安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/)（或 Docker Engine + Compose）。镜像在阿里云 ACR `gcc` 公开命名空间，**拉取无需登录**。

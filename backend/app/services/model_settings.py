@@ -249,8 +249,10 @@ def _bootstrap_logical_from_channels(channels: list[SystemModelChannel]) -> tupl
                     result.append(binding.model_copy())
         return result
 
-    # 图模不再造 seedream-5.0 友好别名；仅视频保留 Seedance 短名
-    if settings.model_video:
+    # 图模不再造 seedream-5.0 友好别名；仅视频保留 Seedance 短名。
+    # Agnes 模型名（agnes-*）不套 seedance 别名：直接以真实 ID 作为逻辑模型与默认，
+    # 避免 "agnes-video-2.5-flash" 因含 "2.5" 被误判成 seedance-2.5 别名。
+    if settings.model_video and not settings.model_video.lower().startswith("agnes-"):
         logical_id, name = _seedance_logical_meta(settings.model_video)
         _append_seedance_alias(
             alias_models,
@@ -259,7 +261,7 @@ def _bootstrap_logical_from_channels(channels: list[SystemModelChannel]) -> tupl
             name=name,
             bindings_for_upstream=_bindings_for_upstream,
         )
-    if settings.model_video_2:
+    if settings.model_video_2 and not settings.model_video_2.lower().startswith("agnes-"):
         logical_id_2, name_2 = _seedance_logical_meta(settings.model_video_2)
         _append_seedance_alias(
             alias_models,
@@ -270,7 +272,10 @@ def _bootstrap_logical_from_channels(channels: list[SystemModelChannel]) -> tupl
         )
     default_video = ""
     if settings.model_video:
-        default_video, _ = _seedance_logical_meta(settings.model_video)
+        if settings.model_video.lower().startswith("agnes-"):
+            default_video = settings.model_video
+        else:
+            default_video, _ = _seedance_logical_meta(settings.model_video)
     elif settings.model_video_2:
         default_video = "seedance-2"
     synced = synchronize_logical_models_with_channels(logical_models, channels)

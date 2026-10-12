@@ -229,6 +229,7 @@ class AgnesClient:
         temperature: float = 0.6,
         max_tokens: int = 4096,
         model: str | None = None,
+        response_format: dict[str, Any] | None = None,
     ) -> str:
         msgs: list[dict[str, Any]] = []
         if system:
@@ -240,6 +241,8 @@ class AgnesClient:
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
+        if response_format:
+            payload["response_format"] = response_format
         key = self._pick_key_sync()
         await self._throttle("text", key, "文本")
         resp = await self._post_json(
