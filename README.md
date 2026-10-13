@@ -5,7 +5,7 @@
 
 > **把故事做成能播的片子** — AI 漫剧与 AI 短视频，从文案到成片。
 
-模板驱动的创作平台：主题 / 剧本 → 分镜 → 生图 → 生视频 → 成片。口播由 Seedance 出片时生成，无需单独配音。
+模板驱动的创作平台：主题 / 剧本 → 分镜 → 生图 → 生视频 → 成片。
 
 **源码**：[github.com/hanchenxing1/printfilm](https://github.com/hanchenxing1/printfilm) · **版本** 0.2.0
 
@@ -65,7 +65,7 @@
 输入主题或剧本
     → 分镜
     → 生图
-    → 生视频（Seedance 自带口播）
+    → 生视频
     → FFmpeg 合成成片
 ```
 
@@ -75,7 +75,7 @@
 
 - **两条产品线共用一套生成能力** — 漫剧与短视频走同一上游
 - **进程内任务平台** — scheduler / executor / poller，无需单独 Celery Worker
-- **模型可换** — 管理后台配置 TokenFree Key 与模型，不必改代码
+- **Agnes 官方 API 全链路** — 文字 / 图 / 视频统一走 Agnes，用户自带 Key 即可出片
 - **Docker 一键启动** — 公开镜像，拉取无需登录
 - **可选计费** — 默认关闭；开启后按用量结算，见 [docs/BILLING.md](docs/BILLING.md)
 
@@ -85,12 +85,12 @@
 |----|------|
 | 后端 | Python 3.12 · FastAPI · SQLAlchemy · PostgreSQL · Redis |
 | 前端 | React 19 · TypeScript · Vite 8（管理端 Tailwind + shadcn） |
-| AI | TokenFree New API（文字 / 图 / 视频） |
+| AI | Agnes 官方 API（文字 / 图 / 视频：`https://apihub.agnes-ai.com/v1`） |
 | 部署 | Docker 全栈镜像，或本机三进程 + 中间件容器 |
 
 ## 单机最简（Windows 双击 start_local.bat，推荐本地体验）
 
-三条能力（**文本 / 图片 / 视频**）默认全部走 **Agnes 官方 API**（`https://apihub.agnes-ai.com/v1`），模型名已写死在代码里：
+三条能力（**文本 / 图片 / 视频**）全部走 **Agnes 官方 API**（`https://apihub.agnes-ai.com/v1`），模型名已写死在代码里：
 
 | 能力 | 模型 ID |
 |------|---------|
@@ -130,8 +130,6 @@ start_local.bat
 4. 在工具中心发一条视频生成任务，验证出片
 
 > 日志目录：`<仓库>/.local-run/`（`api.err.log`、`fe.out.log`、`admin.out.log`）
-> 想改用其它渠道（TokenFree / 豆包）：编辑 `backend/.env`，把 `MODEL_LLM` / `MODEL_IMAGE` / `MODEL_VIDEO` 改成对应模型 ID，并在「系统设置 → 模型」配对应渠道 Key。
-
 
 ## 快速开始（Docker 一键启动）
 
@@ -146,13 +144,13 @@ cd printfilm
 cp deploy/.env.docker.example deploy/.env.docker
 ```
 
-编辑 `deploy/.env.docker`，至少改这三项：
+编辑 `deploy/.env.docker`，至少改这几项：
 
 | 变量 | 说明 |
 |------|------|
 | `POSTGRES_PASSWORD` | 数据库密码（勿用示例默认值） |
 | `SECRET_KEY` | 任意长随机串（会话 / 密钥加密） |
-| `OPENAI_API_KEY` / `ARK_API_KEY` | TokenFree API Key（同一把填两处即可） |
+| `AGNES_API_KEY` / `ARK_API_KEY` | Agnes API Key（同一把填两处即可） |
 
 无 Key 想先看界面：把 `ARK_MOCK=true`。
 
@@ -203,35 +201,43 @@ docker compose --env-file deploy/.env.docker up -d
 docker compose --env-file deploy/.env.docker -f docker-compose.full.yml up -d --build
 ```
 
-## 配置 TokenFree API Key
+## 配置 Agnes API Key
 
-开源版文字 / 图 / 视频统一走 **TokenFree New API**（OpenAI 兼容：`https://www.tokenfree.com/v1`）。没有 Key 时只能 `ARK_MOCK=true` 看界面，不能真实生图 / 生视频。
+开源版文字 / 图 / 视频统一走 **Agnes 官方 API**（`https://apihub.agnes-ai.com/v1`）。没有 Key 时只能 `ARK_MOCK=true` 看界面，不能真实生图 / 生视频。
 
-### A. 在 TokenFree 拿到 Key
+模型名全局统一为 agnes 系列（已写死在代码，无需改动）：
 
-1. 打开 [https://www.tokenfree.com](https://www.tokenfree.com) 注册并登录。
-2. 进入控制台的 **API 密钥 / Tokens**（部分部署路径为 `/token` 或 `/keys`）。
+| 能力 | 模型 ID |
+|------|---------|
+| 文字 | `agnes-3.0-flash` |
+| 图片 | `agnes-image-2.5-flash` |
+| 视频 | `agnes-video-2.5-flash` |
+
+### A. 在 Agnes 拿到 Key
+
+1. 打开 Agnes 控制台注册并登录。
+2. 进入控制台的 **API 密钥 / Tokens**。
 3. 点击 **创建**，填名称（如 `printfilm`），按需设额度 / 过期时间。
 4. **立刻复制完整 Key**（形如 `sk-…`，只显示一次）。
-5. 确认账户有余额或可用额度；模型列表里能看到你要用的对话 / 生图 / 视频模型。
+5. 确认账户有余额或可用额度。
 
-> Key 等同密码，不要提交到 Git、不要发到群聊。泄露后在 TokenFree 控制台作废并重建。
+> Key 等同密码，不要提交到 Git、不要发到群聊。泄露后在 Agnes 控制台作废并重建。
 
 ### B. 写入 Docker 环境（推荐自托管首次启动）
 
 编辑 `deploy/.env.docker`：
 
 ```env
-OPENAI_API_KEY=sk-你的密钥
-OPENAI_BASE_URL=https://www.tokenfree.com/v1
-ARK_API_KEY=sk-你的密钥
+ARK_API_KEY=sk-你的Agnes密钥
 ARK_MOCK=false
-MODEL_LLM=kimi-k2.6
-MODEL_IMAGE=seedream-5-0-pro
-MODEL_VIDEO=seedance-2-5
+AGNES_API_KEY=sk-你的Agnes密钥
+AGNES_BASE_URL=https://apihub.agnes-ai.com/v1
+MODEL_LLM=agnes-3.0-flash
+MODEL_IMAGE=agnes-image-2.5-flash
+MODEL_VIDEO=agnes-video-2.5-flash
 ```
 
-`OPENAI_API_KEY` 与 `ARK_API_KEY` 填**同一把**即可。然后重建 API 容器使环境生效：
+`ARK_API_KEY` 与 `AGNES_API_KEY` 填**同一把** Agnes Key 即可。然后重建 API 容器使环境生效：
 
 ```bash
 docker compose --env-file deploy/.env.docker up -d --force-recreate api
@@ -239,26 +245,22 @@ docker compose --env-file deploy/.env.docker up -d --force-recreate api
 
 打开 http://localhost:8000/api/health ，`ark_mock` 应为 `false`。
 
-### C. 在管理后台填写（推荐日常改 Key）
+### C. 在个人中心填写（推荐日常改 Key）
 
-1. 用管理员登录 http://localhost:8081 。
-2. 打开 **系统设置 → 模型**（路由 / TokenFree 渠道）。
-3. 在 TokenFree 渠道填入 API Key 并保存。
-4. 按需调整默认文字 / 图 / 视频模型；保存后即时生效，一般不必改 `.env`。
+1. 登录后打开 **个人中心 → API**。
+2. 在「Agnes 视频 Key」区粘贴你的 Agnes API Key，点击添加。
+3. 保存后该账号的文字 / 图 / 视频生成全部走 `https://apihub.agnes-ai.com/v1`，使用你添加的 Key。
 
-后台保存的 Key 会加密进数据库；换机器迁移时记得一并备份库，或重新在后台填写。
+Key 加密入库，列表只显示前缀。未填写时回退环境变量 `AGNES_API_KEYS`（多账号逗号分隔，429 自动轮换）。
 
 ### D. 联调排查
 
 | 现象 | 处理 |
 |------|------|
-| 生图 / 生视频报未配置 Key | 检查 `.env.docker` 是否仍为 `replace-me`，或后台渠道是否已填 Key |
+| 生图 / 生视频报未配置 Key | 检查 `.env.docker` 是否仍为 `replace-me`，或个人中心是否已填 Key |
 | `ark_mock: true` | 关掉 `ARK_MOCK`，并确认 Key 非空后 `--force-recreate api` |
-| 401 / 额度不足 | 到 TokenFree 控制台看 Key 是否启用、余额是否够 |
-| 模型名 404 | 在后台模型列表里选 TokenFree 实际提供的模型 id |
-### E. 用自己的 Agnes Key 出视频（本地部署）
-
-注册登录后打开 **个人中心 → API**，在「Agnes 视频 Key」粘贴你的 Agnes API Key。保存后该账号的视频生成走 `https://apihub.agnes-ai.com/v1`，使用你添加的 Key（不再使用平台全局密钥）。未填写时回退环境变量 `AGNES_API_KEYS`。Key 加密入库，列表只显示前缀。
+| 401 / 额度不足 | 到 Agnes 控制台看 Key 是否启用、余额是否够 |
+| 429 限流 | Agnes 免费档 RPM 较低，多任务会串行退避；可配 `AGNES_API_KEYS` 多账号池提升吞吐 |
 
 ## 适用场景
 
@@ -295,7 +297,6 @@ docker-compose.full.yml   从源码构建
 | [docs/STANDARDS.md](docs/STANDARDS.md) | 工程规范 |
 | [docs/BILLING.md](docs/BILLING.md) | 计费与易支付 |
 | [docs/EPISODE_RULES.md](docs/EPISODE_RULES.md) | 漫剧分集 |
-| [docs/SEEDANCE_2_5.md](docs/SEEDANCE_2_5.md) | Seedance 参数 |
 | [deploy/README.md](deploy/README.md) | 本机中间件与运维 |
 
 ## 贡献

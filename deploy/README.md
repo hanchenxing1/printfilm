@@ -32,10 +32,14 @@ Postgres / Redis 端口均映射为 `0.0.0.0`（便于本机直连调试）。�
 正式环境示例：
 
 ```env
-DATABASE_URL=postgresql+asyncpg://printfilm:<密码>@127.0.0.1:5432/printfilm
+DATABASE_URL=postgresql+asyncpg://printfilm:<密码>@127.0.1.5432/printfilm
 DATABASE_URL_SYNC=postgresql+psycopg2://printfilm:<密码>@127.0.0.1:5432/printfilm
 REDIS_URL=redis://127.0.0.1:6379/0
 USE_CELERY=true
+AGNES_API_KEY=sk-你的Agnes密钥
+MODEL_LLM=agnes-3.0-flash
+MODEL_IMAGE=agnes-image-2.5-flash
+MODEL_VIDEO=agnes-video-2.5-flash
 ```
 
 需本机已安装：Python 3.12、FFmpeg（PATH）、Node.js。
