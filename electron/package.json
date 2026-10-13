@@ -1,0 +1,55 @@
+{
+  "name": "printfilm-standalone",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PRINTFILM 单机开源版 — 内嵌 Python 后端 + Agnes 引擎，无需服务器",
+  "author": "PRINTFILM",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --win dir",
+    "dist": "electron-builder --win nsis portable"
+  },
+  "build": {
+    "appId": "com.printfilm.standalone",
+    "productName": "PRINTFILM",
+    "copyright": "PRINTFILM",
+    "asar": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../backend",
+        "to": "backend",
+        "filter": ["!data/**", "!**/*.log", "!**/__pycache__/**", "!tests/**"]
+      },
+      { "from": "../python", "to": "python" },
+      { "from": "../ffmpeg", "to": "ffmpeg" },
+      { "from": "../frontend/dist", "to": "frontend/dist" }
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "PRINTFILM"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
+  }
+}
