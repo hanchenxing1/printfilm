@@ -13,9 +13,9 @@
 
 | 平台 | 安装包 | 说明 |
 |------|--------|------|
-| Windows 桌面版 | [PRINTFILM Setup 1.1.1.exe](https://aidj.aiwyq.bond/apps/printfilm-desktop-1.1.1-setup.exe) | Electron 安装包（约 83 MB） |
-| Windows 便携版 | [PRINTFILM 1.1.1 portable.zip](https://aidj.aiwyq.bond/apps/printfilm-1.1.1-portable.zip) | 免安装，解压即用（约 116 MB） |
-| Android | [printfilm-mobile-1.1.apk](https://aidj.aiwyq.bond/apps/printfilm-mobile-1.1.apk) | 移动端 APK |
+| Windows 桌面版 | [PRINTFILM Setup 1.1.2.exe](https://aidj.aiwyq.bond/apps/printfilm-desktop-1.1.2-setup.exe) | Electron 安装包（约 83 MB），内置在线自动更新 |
+| Windows 便携版 | [PRINTFILM 1.1.2 portable.zip](https://aidj.aiwyq.bond/apps/printfilm-1.1.2-portable.zip) | 免安装，解压即用（约 116 MB） |
+| Android | [printfilm-mobile-1.1.apk](https://aidj.aiwyq.bond/apps/printfilm-mobile-1.1-release.apk) | 移动端 APK（release 签名版） |
 
 ## 界面预览
 
