@@ -400,7 +400,7 @@ class AgnesClient:
             "model": model,
             "prompt": str(prompt),
             "mode": mode,
-            "seconds": str(sec),
+            "seconds": int(sec),
             "size": "720P",
             "aspect_ratio": ratio or "16:9",
             "n": 1,

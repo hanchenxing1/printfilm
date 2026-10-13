@@ -34,6 +34,17 @@ __all__ = [
 ]
 
 
+def _safe_float_duration(val: object, default: float = 5.0) -> float:
+    """容错解析时长：'5s' / '5' / 10 / None → float；无法解析时回退默认值。"""
+    if val is None:
+        return default
+    try:
+        n = float(str(val).strip().lower().replace("s", ""))
+    except (TypeError, ValueError):
+        n = default
+    return max(2.0, n)
+
+
 def _kepu_video_resolution(project: Project | None, settings: Settings) -> str:
     """科普成片清晰度：设置项；HD 且配置为 480p 时升到 720p（与 pipeline 一致）。"""
     raw = str(getattr(settings, "ark_video_resolution", "") or "480p")
@@ -181,7 +192,7 @@ async def estimate_task_fen(db: AsyncSession, task: TaskRun, settings: Settings 
         if task_type in {"shot_regen_image"}:
             return _catalog_image_fen(s, payload=payload)
         if task_type in {"shot_regen_video"}:
-            dur = float(payload.get("duration") or 5)
+            dur = _safe_float_duration(payload.get("duration"), default=5.0)
             project_id = task.project_id or payload.get("project_id")
             project = await db.get(Project, int(project_id)) if project_id else None
             c = charge_fen_official_video(
@@ -208,7 +219,8 @@ async def estimate_task_fen(db: AsyncSession, task: TaskRun, settings: Settings 
                 return _buffered_fen(c, s)
             return _catalog_image_fen(s, payload=payload)
         if task_type in {"asset_video", "fragment_video"}:
-            dur = float(payload.get("duration_sec") or payload.get("duration") or 0)
+            _dur_raw = payload.get("duration_sec") or payload.get("duration") or 0
+            dur = _safe_float_duration(_dur_raw, default=0.0)
             if dur <= 0 and isinstance(payload.get("prepared"), dict):
                 dur = float(payload["prepared"].get("duration") or 0)
             if dur <= 0:
@@ -255,7 +267,7 @@ async def estimate_task_fen(db: AsyncSession, task: TaskRun, settings: Settings 
         if task_type in {"v1_image", "tool_image"}:
             return _catalog_image_fen(s, payload=payload)
         if task_type in {"v1_video", "v1_seedance", "tool_video"}:
-            dur = float(payload.get("duration") or 5)
+            dur = _safe_float_duration(payload.get("duration"), default=5.0)
             c = charge_fen_official_video(
                 max(dur, 2.0),
                 s,

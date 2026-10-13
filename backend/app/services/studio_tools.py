@@ -79,10 +79,11 @@ def ratio_to_size(ratio: str | None) -> str:
 
 # 时长芯片（5s/10s/15s）转秒
 def duration_seconds(raw: str | None) -> int:
-    text = (raw or "5s").strip().lower().replace("s", "")
+    """把前端时长值（"5s" / "5" / 10 等）统一转成秒数，钳到 4–15。"""
+    text = str(raw if raw is not None else "5s").strip().lower().replace("s", "")
     try:
-        n = int(text)
-    except ValueError:
+        n = int(float(text))
+    except (TypeError, ValueError):
         n = 5
     return max(4, min(n, 15))
 
