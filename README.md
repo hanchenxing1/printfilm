@@ -1,13 +1,13 @@
 # PRINTFILM
 
-[![GitHub stars](https://img.shields.io/github/stars/yi1108/printfilm?style=social)](https://github.com/yi1108/printfilm)
+[![GitHub stars](https://img.shields.io/github/stars/hanchenxing1/printfilm?style=social)](https://github.com/hanchenxing1/printfilm)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 > **把故事做成能播的片子** — AI 漫剧与 AI 短视频，从文案到成片。
 
 模板驱动的创作平台：主题 / 剧本 → 分镜 → 生图 → 生视频 → 成片。口播由 Seedance 出片时生成，无需单独配音。
 
-**源码**：[github.com/yi1108/printfilm](https://github.com/yi1108/printfilm) · **版本** 0.2.0
+**源码**：[github.com/hanchenxing1/printfilm](https://github.com/hanchenxing1/printfilm) · **版本** 0.2.0
 
 ## 界面预览
 
@@ -140,7 +140,7 @@ start_local.bat
 ### 1. 克隆并准备环境变量
 
 ```bash
-git clone https://github.com/yi1108/printfilm.git
+git clone https://github.com/hanchenxing1/printfilm.git
 cd printfilm
 
 cp deploy/.env.docker.example deploy/.env.docker
@@ -281,12 +281,12 @@ docker-compose.full.yml   从源码构建
 
 ## 社区
 
-- GitHub：https://github.com/yi1108/printfilm
+- GitHub：https://github.com/hanchenxing1/printfilm
 - 微信加 **`gitpp88`**（备注「入群」）：部署答疑 / 短剧交流 / 模板分享
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/chart?repos=yi1108/printfilm&type=date&legend=top-left)](https://www.star-history.com/#yi1108/printfilm&Date)
+[![Star History Chart](https://api.star-history.com/chart?repos=hanchenxing1/printfilm&type=date&legend=top-left)](https://www.star-history.com/#hanchenxing1/printfilm&Date)
 
 ## 更多文档
 
