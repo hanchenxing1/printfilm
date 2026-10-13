@@ -9,6 +9,13 @@
 
 **源码**：[github.com/hanchenxing1/printfilm](https://github.com/hanchenxing1/printfilm) · **版本** 0.2.0
 
+## 下载
+
+| 平台 | 安装包 | 说明 |
+|------|--------|------|
+| Windows | [PRINTFILM Setup 1.1.0.exe](https://aidj.aiwyq.bond/apps/printfilm-desktop-1.1.0-setup.exe) | 桌面版（Electron 单机） |
+| Android | [printfilm-mobile-1.1.apk](https://aidj.aiwyq.bond/apps/printfilm-mobile-1.1.apk) | 移动端 |
+
 ## 界面预览
 
 **工作台**
