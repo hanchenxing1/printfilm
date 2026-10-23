@@ -53,9 +53,29 @@ export function getPublicApiBase() {
   return API_BASE
 }
 
+export type AgnesKeyInfo = {
+  bound: boolean
+  key: string | null
+  sync_available: boolean
+}
+
+export type AgnesRefreshResult = AgnesKeyInfo & {
+  ok: boolean
+  message: string
+}
+
 export const apiKeysApi = {
   list() {
     return request<ApiKeyItem[]>('/api/user/api-keys')
+  },
+  getAgnes() {
+    return request<AgnesKeyInfo>('/api/user/api-keys/agnes')
+  },
+  refreshAgnes() {
+    return request<AgnesRefreshResult>('/api/user/api-keys/agnes/refresh', { method: 'POST' })
+  },
+  unbindAgnes() {
+    return request<AgnesKeyInfo>('/api/user/api-keys/agnes/unbind', { method: 'POST' })
   },
   create(name: string) {
     return request<ApiKeyCreated>('/api/user/api-keys', {
@@ -67,33 +87,3 @@ export const apiKeysApi = {
     return request<{ ok: boolean }>(`/api/user/api-keys/${id}`, { method: 'DELETE' })
   },
 }
-
-export type AgnesKeyItem = {
-  id: number
-  name: string
-  key_prefix: string
-  active: boolean
-  created_at: string | null
-  last_used_at: string | null
-}
-
-export const agnesKeysApi = {
-  list() {
-    return request<AgnesKeyItem[]>('/api/user/agnes-keys')
-  },
-  create(name: string, key: string) {
-    return request<AgnesKeyItem>('/api/user/agnes-keys', {
-      method: 'POST',
-      body: JSON.stringify({ name, key }),
-    })
-  },
-  setActive(id: number, active: boolean) {
-    return request<{ ok: boolean }>(`/api/user/agnes-keys/${id}?active=${active ? 'true' : 'false'}`, {
-      method: 'PATCH',
-    })
-  },
-  remove(id: number) {
-    return request<{ ok: boolean }>(`/api/user/agnes-keys/${id}`, { method: 'DELETE' })
-  },
-}
-

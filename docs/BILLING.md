@@ -2,8 +2,8 @@
 
 ## 原则
 
-- 按上游 **真实 Agnes 成本**（或无法拿到 usage 时的保守估价）计费。
-- 用户支付价 = Agnes 官方成本，**不再加价**。
+- 按上游 **真实 TokenFree 成本**（或无法拿到 usage 时的保守估价）计费。
+- 用户支付价 = TokenFree 官方成本，**不再加价**。
 - 钱包单位：**分（fen）**。
 - 充值：易支付 [pay.gitcc.com](https://pay.gitcc.com/)，支付宝 `alipay` / 微信 `wxpay`。
 - **所有 AI 调用**均关联 `task_run_id`（单次聊天/API/工具调用创建轻量 TaskRun）。
@@ -26,25 +26,26 @@ charge_fen = ceil(tokens / 1e6 * provider_yuan_per_m * 100)
 
 | billing_key | 成本 |
 |-------------|------|
-| agnes-3.0-flash:llm | 5 |
-| agnes-image-2.5-flash:image | 8（按次折合约；有上游费用则优先） |
-| agnes-video-2.5-flash:video | 46（720P）/ 28（480P，按次折合约） |
+| seedance2:video0 | 46 |
+| seedance2:video1 | 28 |
+| llm_chat | 5 |
+| seedream | 8（按次折合约；有上游费用则优先） |
 | tts | 2（按次估价） |
 
-### Agnes 上游（quota 计费）
+### TokenFree / New API（quota 计费）
 
-上游统一走 Agnes 官方 API（https://apihub.agnes-ai.com/v1）。单次调用若返回 `usage.quota` / `quota_consumed`，按额度折人民币：
+上游统一走 TokenFree。单次调用若返回 `usage.quota` / `quota_consumed`，按 New API 额度折人民币：
 
 ```
 cost_fen = ceil(quota / 500000 × BILLING_USD_CNY × 100)   # 500000 quota = 1 USD
 charge_fen = cost_fen
 ```
 
-未返回 quota 时回退 token 单价。管理端「支付与计费」可拉取 Agnes 公开价目展示推荐模型官方价。
+未返回 quota 时回退 token 单价。管理端「支付与计费」可「查询上游余额」（`GET /v1/dashboard/billing/subscription` + `usage`），并拉取公开价目 `GET https://new.aiwyq.bond/api/pricing` 展示推荐模型官方价。
 
-预扣：生图 / 生视频按逻辑模型路由解析出的上游模型名原样调用（如 gnes-image-2.5-flash / gnes-video-2.5-flash，不做硬改写）。LLM 默认 gnes-3.0-flash，in/out 按 70/30 拆分估价。视频按模型×清晰度结算参考秒价（VENDOR_VIDEO_YUAN_5S_BY_RES，汇率取 illing_usd_cny）；漫剧缺省按 720P。勿把美元 cost 当人民币。
+预扣：生图 API 按逻辑模型路由解析出的上游模型名原样调用 TokenFree（如渠道启用的 `gpt-image-2` / `seedream-5-0-pro`，不做硬改写）。**gpt-image / sunburst** 计费按 Kie 积分档（1K 6 积分 / 2K 10 积分 / 4K 16 积分；默认 3.5 分/积分 → 2K 35 分，对应 $0.03 / $0.05 / $0.08），**不要**用 OpenAI $0.625 目录价。**Seedream** 优先用 TokenFree `/api/pricing` 按张价；无价目时才用上述 Kie 2K 档作保守保底。**按张官价不再乘 `billing_estimate_buffer`（默认 1.2）**。LLM / 视频 / TTS 估价仍乘缓冲。结算优先单次 `quota` 或 Kie credits；无用量时同样按张档位价，**不再**用 8 元/百万 token。LLM 按官方 in/out（默认 kimi-k2.6，70/30 拆）。视频不用价目表占位 `model_ratio=37.5`，按模型×清晰度结算参考秒价（`VENDOR_VIDEO_YUAN_5S_BY_RES` / MiniMax 秒价，汇率取 `billing_usd_cny`）；漫剧缺省按 720P。勿把 New API 的美元 `cost` 当人民币。
 
-管理端「官方用量对照」复用模型页 Agnes API Key，拉取日消耗并与本地成本对照。
+管理端「官方用量对照」复用模型页 TokenFree API Key，拉取 New API 日消耗（`/api/data/self` 或 billing usage，日期无效时按累计额度差分记到当天）并与本地成本对照。
 
 ## TaskRun 计费流程
 
@@ -109,12 +110,12 @@ sequenceDiagram
 | Skill 优化提示词 | `drama` | `skill_optimize` | 同步 ephemeral |
 | 角色音色描述 | `drama` | `voice_prompt` | 同步 ephemeral |
 | 剧本摘要 | `drama` | `script_summary` | 异步任务 |
-| 分集大纲 + 分集正文 | `drama` | `episode_script` | 异步任务（大纲与每集各记 agnes-3.0-flash:llm） |
+| 分集大纲 + 分集正文 | `drama` | `episode_script` | 异步任务（大纲与每集各记 llm_chat） |
 | AI 分镜 | `drama` | `fragment_plan` | 异步任务 |
 | 资产抽取 / 刷新提示词 | `drama` | `seed_assets` | 异步或同步 ephemeral |
 | 资产生图前视觉提示词 LLM | `drama` | `asset_image` / `fragment_video` 等 | 嵌套于父任务 billing_scope |
 
-嵌套 LLM（如 `visual_prompt`）在父任务 `billing_scope` 内通过 `record_agnes-3.0-flash:llm_line` 追加用量行；无 scope 时由 seed 等路径聚合计费，避免重复。
+嵌套 LLM（如 `visual_prompt`）在父任务 `billing_scope` 内通过 `record_llm_chat_line` 追加用量行；无 scope 时由 seed 等路径聚合计费，避免重复。
 
 **不计 LLM 的场景**：分镜规则回退（`rules_fallback`）、分集大纲已就绪跳过大纲 LLM、Skill 优化未勾选任何 Skill。
 
@@ -159,16 +160,16 @@ EPAY_RETURN_URL=https://your-site.example.com/pricing?paid=1
 | GET | `/api/admin/tasks/{id}` | 任务详情含 `usage_lines` 与计费字段 |
 | GET | `/api/admin/stats/upstream-usage` | 近 N 日官方/本地成本对照 |
 | POST | `/api/admin/stats/upstream-usage/sync` | 手动刷新官方用量快照 |
-| GET | `/api/admin/settings/billing/model-rates` | 推荐模型 Agnes 官方价 |
-| GET | /api/admin/settings/agnes/quota | 查询 Agnes 账户剩余额度 |
+| GET | `/api/admin/settings/billing/model-rates` | 推荐模型 TokenFree 官方价（/api/pricing） |
+| GET | `/api/admin/settings/tokenfree/quota` | 查询 TokenFree 账户剩余额度 |
 
 ## 管理端
 
-- **设置 → 支付与计费**：按 Agnes 官方成本 1:1 扣费；可查看模型费率表与查询 Agnes 余额。
+- **设置 → 支付与计费**：按 TokenFree 官方成本 1:1 扣费；可查看模型费率表与查询 TokenFree 余额。
 - **订单与流水** → 「用量明细」Tab：按用户/任务/领域筛选 `usage_events`。
 - **任务队列** → 列表「费用」列显示 `billing_charged_fen`（冻结中显示预扣）。
 - **任务详情** → 「计费」Tab：预扣/实扣/退回 + 用量行列表。
-- **仪表盘** → 「Agnes 官方用量对照」：本地成本 vs Agnes 用量（需在「模型」填写 Agnes API Key）。
+- **仪表盘** → 「TokenFree 官方用量对照」：本地成本 vs New API 用量（需在「模型」填写 TokenFree API Key）。
 
 ## 验收清单
 
@@ -177,5 +178,5 @@ EPAY_RETURN_URL=https://your-site.example.com/pricing?paid=1
 3. 漫剧聊天 / 选题扩写 / Skill 优化 / 音色描述 / 开放 API / 工作室工具：响应含 `task_id`（轻量 TaskRun），余额变化正确。
 4. 管理端可按 `task_run_id` 或 `billing_key=llm_chat` 查到每条 LLM/图/视频/TTS 费用。
 5. Seedance 视频成功后 `usage_events.estimated=false` 且 `total_tokens` 与官方任务查询一致。
-6. 配置 Agnes API Key 后，管理端可刷新并查看近 30 日官方/本地成本对照。
-7. 单次调用若带 quota / quota_consumed，按额度折人民币后按官方成本 1:1 扣费；管理端可查询 Agnes 余额。
+6. 配置 TokenFree API Key 后，管理端可刷新并查看近 30 日官方/本地成本对照。
+7. 单次调用若带 New API `quota` / `quota_consumed`，按额度折人民币后按官方成本 1:1 扣费；管理端可查询 TokenFree 余额。

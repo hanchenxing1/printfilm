@@ -252,6 +252,8 @@ export const dramaApi = {
     description?: string
     source?: string
     episode_count?: number
+    /** 每集目标时长（秒）：60/120/300/600 四档，驱动正文长度与分镜数量 */
+    episode_duration_sec?: number
     image_style_id?: string
     workflow?: 'script' | 'canvas'
   }) =>

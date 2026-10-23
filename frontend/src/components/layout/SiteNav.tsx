@@ -31,7 +31,6 @@ function normalizeActive(active: NavActive | undefined, pathname: string): NavAc
     return 'kepu'
   }
   if (pathname.startsWith('/tools')) return 'tools'
-  if (pathname.startsWith('/pricing')) return 'pricing'
   if (pathname === '/') return 'home'
   return undefined
 }
@@ -97,9 +96,6 @@ export default function SiteNav({ active }: Props) {
       <NavLink to="/assets" className={() => isActive('assets')}>
         {t('nav.assets')}
       </NavLink>
-      <NavLink to="/pricing" className={() => isActive('pricing')}>
-        {t('nav.pricing')}
-      </NavLink>
     </>
   )
 
@@ -148,6 +144,21 @@ export default function SiteNav({ active }: Props) {
       </div>
       {menuOpen ? (
         <div className="pf-nav-drawer" role="dialog" aria-label={t('nav.mobileNav')}>
+          <div className="pf-nav-drawer-top">
+            <LanguageSwitch />
+            <button
+              type="button"
+              className="pf-nav-help-btn"
+              title={t('nav.helpCenter')}
+              onClick={() => nav('/help')}
+            >
+              <IconHelp size={18} className="pf-nav-help-icon" />
+              <span>{t('nav.help')}</span>
+            </button>
+            <Button variant="lime" size="sm" icon onClick={goCreate}>
+              {t('nav.startCreate')}
+            </Button>
+          </div>
           <nav className="pf-nav-drawer-links">
             {centerLinks}
           </nav>

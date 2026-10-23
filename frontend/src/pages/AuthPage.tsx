@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api'
@@ -8,6 +8,14 @@ import { useI18n } from '../i18n'
 import { isValidAuthPassword, isValidEmailInput } from '../lib/validateAuthForm'
 
 type AuthMode = 'login' | 'register' | 'forgot' | 'reset'
+
+// 注册统一走 dj 站 Agnes 开通页：开通后在 aidj 登录将自动绑定该邮箱的免费 Key
+// ?tab=reg 让 dj /m/ 直达「注册开通」标签；&from=aidj 让 dj 注册成功后把凭据
+// 写入 .aiwyq.bond 一次性 cookie 并跳回 aidj，aidj 首页脚本自动登录
+// 注册 / 开通统一走 Agnes 官方 API 网关 new.aiwyq.bond（New API 网关）：
+// 新用户注册送 10 元免费额度，注册后在 /user 控制台创建 API Key（sk-…），
+// 再到本站管理后台「系统设置 → 模型」填入即可调用 Agnes 文字 / 图 / 视频。
+const AGNES_REGISTER_URL = 'https://new.aiwyq.bond/auth/register'
 
 // 仅允许站内相对路径回跳，防止开放重定向
 function safeNextPath(raw: string | null, fallback = '/') {
@@ -45,6 +53,13 @@ export default function AuthPage() {
   const [notice, setNotice] = useState('')
   const [loading, setLoading] = useState(false)
   const resetToken = (params.get('token') || '').trim()
+
+  // 所有注册入口（含 ?mode=register / URL 直开）直接跳 dj 开通页，本页不再承载注册表单
+  useEffect(() => {
+    if (mode === 'register') {
+      window.location.replace(AGNES_REGISTER_URL)
+    }
+  }, [mode])
 
   // 切换模式并同步 URL（保留 next）
   function switchMode(next: AuthMode) {
@@ -177,6 +192,20 @@ export default function AuthPage() {
               <input value={nickname} onChange={(e) => setNickname(e.target.value)} />
             </label>
           )}
+          {mode === 'register' && (
+            <div className="auth-agnes-guide">
+              <strong>{t('auth.agnesGuideTitle')}</strong>
+              <p>{t('auth.agnesGuideBody')}</p>
+              <a
+                href={AGNES_REGISTER_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="auth-agnes-link"
+              >
+                {t('auth.agnesGuideLink')} ↗
+              </a>
+            </div>
+          )}
           {(mode === 'login' || mode === 'register' || mode === 'forgot') && (
             <label>
               {t('auth.email')}
@@ -235,7 +264,7 @@ export default function AuthPage() {
           <button
             type="button"
             className="linkish"
-            onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}
+            onClick={() => (mode === 'login' ? window.location.assign(DJ_REGISTER_URL) : switchMode('login'))}
           >
             {mode === 'login' ? t('auth.toRegister') : t('auth.toLogin')}
           </button>

@@ -37,8 +37,7 @@ SEEDANCE_VISUAL_STYLE_SECTION_INTRO = (
     "【强制约束：视频画面风格】全片画面必须严格遵循以下风格描述，"
     "严禁偏离、弱化或混用其他画风与镜头美学："
 )
-# 音色难控：Seedance 暂不提交 reference_audio、不写音色约束，口播由 generate_audio 自发挥；
-# Agnes 路径（agnes-video-*）无音频参数通道，不提交任何音色/参考音频，配音与字幕由视频模型自行输出。
+# 音色难控：暂不提交 reference_audio、不写音色约束；口播由 Seedance generate_audio 自发挥。
 # 恢复绑定/提交时改回 True。
 SEEDANCE_ATTACH_REFERENCE_AUDIO = False
 SEEDANCE_CHARACTER_VOICE_SECTION_HEADER = (

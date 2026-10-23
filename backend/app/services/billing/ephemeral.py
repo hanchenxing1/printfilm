@@ -140,10 +140,7 @@ async def run_billed_ephemeral(
     result: T
     try:
         async with billing_scope(task.id):
-            from app.services.agnes_keys import user_agnes_scope
-
-            async with user_agnes_scope(db, user):
-                result = await executor()
+            result = await executor()
         task.status = "succeeded"
         task.progress_percent = 100
         task.finished_at = datetime.now(UTC)
@@ -245,10 +242,7 @@ async def run_billed_ephemeral_deferred(
     result: T
     try:
         async with billing_scope(task.id):
-            from app.services.agnes_keys import user_agnes_scope
-
-            async with user_agnes_scope(db, user):
-                result = await executor()
+            result = await executor()
         provider_id = _extract_provider_task_id(result)
         if not provider_id:
             raise RuntimeError("上游未返回 task_id")

@@ -3882,6 +3882,29 @@
   .drama-ep-card-ai-btn {
     flex: 1;
   }
+
+  /* detail head: on narrow screens the left title was squeezed to 0 width
+     by the right actions (h2 rendered one char per line, buttons overlapped),
+     so stack vertically: title takes full width, action row wraps below */
+  .drama-outline-detail-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .drama-outline-detail-title {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .drama-outline-detail-title h2 {
+    font-size: 18px;
+  }
+
+  .drama-outline-detail-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 
 /* legacy episode card (keep for any stale refs) */
@@ -6247,19 +6270,62 @@
     grid-template-columns: 1fr;
     overflow: auto;
   }
+  /* 窄屏：顶栏 7 个参数按钮 + AI重新分镜 会 wrap 成 2~3 行，固定 56px 高度
+     溢出叠压到下方内容。改为弹性高度 + 纵向分层：第一行 返回/标题，
+     第二行 参数组自动换行，header 高度随内容撑开 */
+  .drama-ep-header {
+    height: auto;
+    min-height: 56px;
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    row-gap: 8px;
+  }
 
+  .drama-ep-header-left {
+    width: 100%;
+    order: 0;
+  }
+
+  .drama-ep-header-controls {
+    order: 1;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .drama-ep-header-controls > .drama-ep-btn-ghost,
+  .drama-ep-header-controls > .drama-ep-btn-dark {
+    white-space: nowrap;
+  }
+
+  .drama-ep-header-gen-opts .fc-gen-opt-btn {
+    max-width: 160px;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  /* 窄屏：workspace 由三列 grid 塌成单列时 preview/assets/editor 行轨道
+     auto 高度互相侵入导致叠压；改为纵向 flex 堆叠，显式排序
+     preview→assets→editor（preview 在 860px 下 DOM 上最末，需提到最前） */
   .drama-ep-workspace {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
   }
 
-  .drama-ep-assets,
   .drama-ep-preview {
+    order: 0;
     border: none;
-    max-height: 280px;
+    max-height: 300px;
   }
 
-  .drama-ep-preview {
-    order: -1;
+  .drama-ep-assets {
+    order: 1;
+    border: none;
+    flex: 0 0 auto;
+    max-height: 240px;
+  }
+
+  .drama-ep-editor {
+    order: 2;
   }
 
   .drama-episodes-page {
@@ -7018,4 +7084,100 @@
   margin: 6px 0 0;
   font-size: 12px;
   color: #b91c1c;
+}
+
+/* 分镜条已生成视频片段：可点击预览态 */
+.drama-ep-clip.is-video {
+  cursor: pointer;
+  position: relative;
+}
+
+.drama-ep-clip.is-video::after {
+  content: '▶';
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: #fff;
+  background: rgba(15, 23, 42, 0.72);
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.drama-ep-clip.is-video video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 页内全屏预览浮层 */
+.drama-ep-frag-preview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.drama-ep-frag-preview {
+  width: min(100%, 460px);
+  max-height: calc(100dvh - 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #0f172a;
+  border-radius: 16px;
+  padding: 12px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+}
+
+.drama-ep-frag-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.drama-ep-frag-preview-title {
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.drama-ep-frag-preview-close {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  cursor: pointer;
+}
+
+.drama-ep-frag-preview-close:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.drama-ep-frag-preview-video {
+  width: 100%;
+  max-height: calc(100dvh - 110px);
+  object-fit: contain;
+  border-radius: 10px;
+  background: #000;
+  display: block;
 }

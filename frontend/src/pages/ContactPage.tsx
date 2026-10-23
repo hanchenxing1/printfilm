@@ -135,7 +135,6 @@ export default function ContactPage() {
           <Link to="/terms">{t('footer.terms')}</Link>
           <Link to="/privacy">{t('footer.privacy')}</Link>
           <Link to="/help">{t('footer.help')}</Link>
-          <Link to="/pricing">{t('contact.pricing')}</Link>
         </nav>
       </div>
     </AppShell>

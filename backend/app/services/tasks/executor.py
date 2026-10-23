@@ -92,12 +92,7 @@ async def execute_task_run(task_id: int) -> None:
                 if not task:
                     return
                 handler = get_task_handler(task.domain, task.task_type)
-                from app.models import User
-                from app.services.agnes_keys import user_agnes_scope
-
-                user = await db.get(User, task.requested_by) if task.requested_by else None
-                async with user_agnes_scope(db, user):
-                    result = await handler.executor(task) if handler else {"ok": False, "error": "missing_handler"}
+                result = await handler.executor(task) if handler else {"ok": False, "error": "missing_handler"}
                 # 重新加载（含 selectinload steps）；勿 refresh，会卸掉关系再触发懒加载。
                 task = await get_task_for_runtime(db, task_id)
                 if not task:

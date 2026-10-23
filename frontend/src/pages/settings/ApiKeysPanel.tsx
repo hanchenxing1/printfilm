@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { agnesKeysApi, apiKeysApi, getPublicApiBase, type AgnesKeyItem, type ApiKeyItem } from '../../api/apiKeys'
+import { apiKeysApi, getPublicApiBase, type AgnesKeyInfo, type ApiKeyItem } from '../../api/apiKeys'
+import { useI18n } from '../../i18n'
 import { dialog } from '../../lib/dialog'
 
 /** 格式化时间 */
@@ -17,30 +18,31 @@ function formatWhen(iso?: string | null) {
 
 /** 设置页 API：Key 管理与调用文档 */
 export default function ApiKeysPanel() {
+  const { t } = useI18n()
   /*
    * keys Key 列表
    * name 新建名称
    * busy 提交中
    * error 错误
    * createdSecret 刚创建的一次性 secret
+   * agnes Agnes 免费 key 绑定态
+   * agnesMsg 同步/解绑提示
    */
   const [keys, setKeys] = useState<ApiKeyItem[]>([])
   const [name, setName] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [createdSecret, setCreatedSecret] = useState('')
-  const [agnesKeys, setAgnesKeys] = useState<AgnesKeyItem[]>([])
-  const [agnesName, setAgnesName] = useState('')
-  const [agnesSecret, setAgnesSecret] = useState('')
+  const [agnes, setAgnes] = useState<AgnesKeyInfo | null>(null)
+  const [agnesMsg, setAgnesMsg] = useState('')
 
   const base = getPublicApiBase()
 
   async function reload() {
     setError('')
     try {
-      const [k, a] = await Promise.all([apiKeysApi.list(), agnesKeysApi.list()])
-      setKeys(k)
-      setAgnesKeys(a)
+      setKeys(await apiKeysApi.list())
+      setAgnes(await apiKeysApi.getAgnes())
     } catch (e) {
       setError(e instanceof Error ? e.message : '加载失败')
     }
@@ -86,47 +88,6 @@ export default function ApiKeysPanel() {
     }
   }
 
-
-  async function handleAddAgnes() {
-    if (busy) return
-    const secret = agnesSecret.trim()
-    if (!secret) {
-      setError('请填写 Agnes Key')
-      return
-    }
-    setBusy(true)
-    setError('')
-    try {
-      await agnesKeysApi.create(agnesName.trim() || '默认 Agnes Key', secret)
-      setAgnesName('')
-      setAgnesSecret('')
-      await reload()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : '添加 Agnes Key 失败')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function handleRemoveAgnes(item: AgnesKeyItem) {
-    const ok = await dialog.confirm({
-      title: '删除 Agnes Key',
-      message: `确定删除「${item.name}」（${item.key_prefix}）？删除后该账号将回退使用全局通道。`,
-      confirmText: '删除',
-    })
-    if (!ok) return
-    setBusy(true)
-    setError('')
-    try {
-      await agnesKeysApi.remove(item.id)
-      await reload()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : '删除失败')
-    } finally {
-      setBusy(false)
-    }
-  }
-
   async function copyText(text: string) {
     try {
       await navigator.clipboard.writeText(text)
@@ -135,10 +96,64 @@ export default function ApiKeysPanel() {
     }
   }
 
+  async function handleSyncAgnes() {
+    if (busy) return
+    setBusy(true)
+    setAgnesMsg('')
+    try {
+      const r = await apiKeysApi.refreshAgnes()
+      setAgnes(r)
+      setAgnesMsg(r.ok ? t('settings.agnesKeySyncOk') : r.message)
+    } catch (e) {
+      setAgnesMsg(e instanceof Error ? e.message : '同步失败')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleUnbindAgnes() {
+    if (busy || !agnes) return
+    setBusy(true)
+    setAgnesMsg('')
+    try {
+      const r = await apiKeysApi.unbindAgnes()
+      setAgnes(r)
+      setAgnesMsg(t('settings.agnesKeyUnbound'))
+    } catch (e) {
+      setAgnesMsg(e instanceof Error ? e.message : '解绑失败')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <section className="pf-settings-card">
       <h1>API</h1>
       <p className="pf-muted">使用 API Key 调用生图、生视频与 Seedance 转发，按量从余额扣费</p>
+
+      <div className="pf-agnes-card">
+        <div className="pf-agnes-head">
+          <strong>{t('settings.agnesKeyTitle')}</strong>
+          <span className="pf-muted">{agnes?.bound ? t('settings.agnesKeyBound') : t('settings.agnesKeyNotBound')}</span>
+        </div>
+        <p className="pf-muted">{t('settings.agnesKeySyncHint')}</p>
+        {agnes?.key ? (
+          <div className="pf-api-secret">
+            <code>{agnes.key}</code>
+            <button type="button" className="pf-btn pf-btn-ghost pf-btn-sm" onClick={() => void copyText(agnes.key ?? '')}>
+              {t('settings.agnesKeyCopy')}
+            </button>
+            <button type="button" className="pf-btn pf-btn-ghost pf-btn-sm" disabled={busy} onClick={() => void handleUnbindAgnes()}>
+              {t('settings.agnesKeyUnbind')}
+            </button>
+          </div>
+        ) : (
+          <button type="button" className="pf-btn pf-btn-lime pf-btn-sm" disabled={busy} onClick={() => void handleSyncAgnes()}>
+            {busy ? t('auth.processing') : t('settings.agnesKeySync')}
+          </button>
+        )}
+        {agnesMsg ? <p className="pf-agnes-msg">{agnesMsg}</p> : null}
+      </div>
 
       <div className="pf-api-create">
         <input
@@ -193,56 +208,6 @@ export default function ApiKeysPanel() {
       ) : (
         <div className="pf-settings-empty">
           <p>还没有 API Key</p>
-        </div>
-      )}
-
-
-      <h2 style={{ marginTop: 28 }}>Agnes 视频 Key</h2>
-      <p className="pf-muted">本地部署时在此填写你自己的 Agnes Key。生成视频会走 https://apihub.agnes-ai.com/v1，使用你添加的 Key，不再使用平台全局密钥。</p>
-      <div className="pf-api-create">
-        <input
-          value={agnesName}
-          onChange={(e) => setAgnesName(e.target.value)}
-          placeholder="备注，如「我的 Agnes」"
-          maxLength={64}
-        />
-        <input
-          value={agnesSecret}
-          onChange={(e) => setAgnesSecret(e.target.value)}
-          placeholder="粘贴 Agnes API Key（sk-...）"
-          maxLength={256}
-        />
-        <button type="button" className="pf-btn pf-btn-lime pf-btn-sm" disabled={busy} onClick={() => void handleAddAgnes()}>
-          {busy ? '处理中…' : '添加 Agnes Key'}
-        </button>
-      </div>
-      {agnesKeys.length > 0 ? (
-        <ul className="pf-settings-list pf-api-key-list">
-          {agnesKeys.map((item) => (
-            <li key={item.id}>
-              <div className="pf-settings-list-row">
-                <span className="pf-settings-list-main">
-                  <strong>{item.name}</strong>
-                  <em className="pf-muted">
-                    {item.key_prefix} · {item.active ? '已启用' : '已停用'} · 创建于 {formatWhen(item.created_at)}
-                    {item.last_used_at ? ` · 最近使用 ${formatWhen(item.last_used_at)}` : ''}
-                  </em>
-                </span>
-                <button
-                  type="button"
-                  className="pf-btn pf-btn-ghost pf-btn-sm"
-                  disabled={busy}
-                  onClick={() => void handleRemoveAgnes(item)}
-                >
-                  删除
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className="pf-settings-empty">
-          <p>还没有 Agnes Key。添加后即可用自己的账号生成视频。</p>
         </div>
       )}
 

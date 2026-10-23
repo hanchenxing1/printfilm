@@ -7,7 +7,6 @@ export const zhPages = {
     lede: 'AI 漫剧从剧本到分集成片，AI短视频从卖点到分镜成片。一套工作台，两种出片方式。',
     startCreate: '开始创作',
     browseTools: '浏览工具',
-
     products: '主产品',
     dramaTitle: 'AI 漫剧',
     dramaFor: '给短剧创作者',
@@ -78,7 +77,6 @@ export const zhPages = {
       { id: 'kepu', title: 'AI短视频', desc: '分镜流水线与成片', href: '/history' },
       { id: 'tools', title: '创作工具', desc: '文生图 / 图生图 / 视频', href: '/tools' },
       { id: 'settings', title: '个人中心', desc: '项目 · 记录 · 下载', href: '/settings?tab=tools' },
-      { id: 'billing', title: '充值说明', desc: '按量计费，余额永久有效', href: '/pricing' },
     ],
     steps: [
       {
@@ -359,17 +357,17 @@ export const zhPages = {
     why3: '账单清晰可查，每次调用可追溯',
     footBrand: 'AI 短视频创作伙伴',
     skus: {
-      topup_10: '体验充值',
-      topup_49: '基础充值',
-      topup_99: '进阶充值',
-      topup_199: '专业充值',
+      topup_custom: '余额充值',
+      sub_plus_day: 'Plus 日卡',
+      sub_plus_week: 'Plus 周卡',
+      sub_plus_month: 'Plus 月卡',
+      sub_plus_year: 'Plus 年卡',
+      sub_pro_day: 'Pro 日卡',
+      sub_pro_week: 'Pro 周卡',
+      sub_pro_month: 'Pro 月卡',
+      sub_pro_year: 'Pro 年卡',
     },
-    skuHints: {
-      topup_10: '适合初次体验',
-      topup_49: '日常创作够用',
-      topup_99: '高频创作推荐',
-      topup_199: '团队 / 批量生产',
-    },
+    topupHint: '选择快捷档位或输入自定义金额，到账即充值金额',
     walletBalance: '可用余额',
     hideBalance: '隐藏余额',
     showBalance: '显示余额',

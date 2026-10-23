@@ -4,6 +4,7 @@ from pathlib import Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
+from datetime import UTC, datetime, timedelta
 from app.database import get_db
 from app.deps import get_current_user
 from app.models import User, WalletLedger
@@ -42,12 +43,19 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)) ->
     if existing:
         raise HTTPException(status_code=400, detail="邮箱已注册")
     grant = int(settings.billing_signup_grant_fen or 0)
+    grant_days = int(getattr(settings, "billing_signup_grant_days", 7) or 0)
+    grant_expire = (
+        datetime.now(UTC) + timedelta(days=grant_days) if grant > 0 and grant_days > 0 else None
+    )
     user = User(
         email=body.email.lower(),
         nickname=body.nickname,
         hashed_password=hash_password(body.password),
         quota_left=settings.new_user_quota,
-        balance_fen=grant,
+        balance_fen=0,
+        grant_fen=grant,
+        frozen_grant_fen=0,
+        grant_expire_at=grant_expire,
         plan="free",
     )
     db.add(user)
@@ -61,7 +69,7 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)) ->
                 kind="grant",
                 ref_type="signup",
                 ref_id=str(user.id),
-                note="signup_grant",
+                note=f"signup_grant({grant_days}d)",
             )
         )
     await db.commit()

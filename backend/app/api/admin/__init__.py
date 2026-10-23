@@ -15,6 +15,7 @@ from app.api.admin import (
     settings,
     tasks,
     templates,
+    update,
     usage,
     users,
     works,
@@ -37,3 +38,4 @@ router.include_router(drama_projects.router)
 router.include_router(drama_assets.router)
 router.include_router(drama_episodes.router)
 router.include_router(drama_fragments.router)
+router.include_router(update.router)

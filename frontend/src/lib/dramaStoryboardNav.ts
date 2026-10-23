@@ -1,15 +1,15 @@
 /** 分镜入口：跳过中间分集页，直达首集编辑 */
 import { dramaApi, type DramaEpisode } from '../api/drama'
 
-/** 已有分集只读取；没有分集才按剧本切一次。force 才走重切。 */
+/**
+ * 进入分镜时统一走 seed 接口（force=false）：
+ * - 分镜已正常切分 → 原样返回，开销极小
+ * - 存量「每集一条空分镜 + 剧本正文已就绪」→ 后端自动重切成多镜
+ */
 export async function loadDramaEpisodes(
   projectId: number,
   force = false,
 ): Promise<DramaEpisode[]> {
-  if (!force) {
-    const existing = await dramaApi.listEpisodes(projectId)
-    if (existing.length) return existing
-  }
   return dramaApi.seedEpisodes(projectId, force)
 }
 

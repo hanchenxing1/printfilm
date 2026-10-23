@@ -26,7 +26,9 @@ import {
 import RequireAuth from './RequireAuth'
 import { useI18n } from '../../i18n'
 import { DramaEpisodeCountPopover } from './DramaEpisodeCountPopover'
+import { DramaEpisodeDurationPopover } from './DramaEpisodeDurationPopover'
 import { DramaImageStyleModal } from './DramaImageStyleModal'
+import { enqueueProjectAssetImages } from '../../lib/dramaBatchAssetImages'
 import { DramaProjectCardMenu } from './DramaProjectCardMenu'
 import './drama.css'
 
@@ -94,6 +96,7 @@ function DramaListInner() {
    */
   const [storyText, setStoryText] = useState('')
   const [episodeCount, setEpisodeCount] = useState(12)
+  const [episodeDurationSec, setEpisodeDurationSec] = useState(60)
   const [imageStyleId, setImageStyleId] = useState<ImageStyleId | ''>('')
   const [items, setItems] = useState<DramaProjectListItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -105,6 +108,7 @@ function DramaListInner() {
   const [filter, setFilter] = useState<ProjectFilter>('all')
   const [query, setQuery] = useState('')
   const [showCreate, setShowCreate] = useState(false)
+  const [batchImageBusyId, setBatchImageBusyId] = useState<number | null>(null)
 
   // 加载项目列表
   async function loadProjects() {
@@ -140,6 +144,7 @@ function DramaListInner() {
       const project = await dramaApi.createProject({
         source,
         episode_count: episodeCount,
+        episode_duration_sec: episodeDurationSec,
         image_style_id: imageStyleId || undefined,
         title: source.slice(0, 40),
       })
@@ -240,6 +245,24 @@ function DramaListInner() {
       await loadProjects()
     } catch (err) {
       setError(err instanceof Error ? err.message : t('dramaList.renameFailed'))
+    }
+  }
+
+  // 一键生成该项目全部未出图参考图
+  async function handleGenerateAllRefs(item: DramaProjectListItem) {
+    if (batchImageBusyId != null) return
+    setBatchImageBusyId(item.id)
+    setError('')
+    try {
+      await enqueueProjectAssetImages({
+        projectId: item.id,
+        title: '一键生成全部参考图',
+        confirmVerb: '开始生成',
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '一键生成参考图失败')
+    } finally {
+      setBatchImageBusyId(null)
     }
   }
 
@@ -391,6 +414,8 @@ function DramaListInner() {
                   <DramaImageStyleModal value={imageStyleId} onChange={setImageStyleId} disabled={busy} />
                   <span className="drama-agent-opt-divider" aria-hidden />
                   <DramaEpisodeCountPopover value={episodeCount} onChange={setEpisodeCount} disabled={busy} />
+                  <span className="drama-agent-opt-divider" aria-hidden />
+                  <DramaEpisodeDurationPopover value={episodeDurationSec} onChange={setEpisodeDurationSec} disabled={busy} />
                 </div>
                 <Button
                   variant="lime"
@@ -509,6 +534,20 @@ function DramaListInner() {
                       {formatDramaUsageBrief(item.usage)}
                     </p>
                     <p className="pf-drama-card-time">{formatUpdatedAt(item.updated_at || item.created_at)}</p>
+                    {!canvas ? (
+                      <button
+                        type="button"
+                        className="pf-drama-card-gen-btn"
+                        disabled={batchImageBusyId != null}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          void handleGenerateAllRefs(item)
+                        }}
+                      >
+                        <Sparkles size={14} strokeWidth={1.8} aria-hidden />
+                        {batchImageBusyId === item.id ? '入队中…' : '一键生成全部参考图'}
+                      </button>
+                    ) : null}
                   </div>
                 </article>
               )

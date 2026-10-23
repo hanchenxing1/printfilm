@@ -148,6 +148,9 @@ async def _tick() -> None:
         # 低频对账：收敛 settle 异常中断遗留的"终态 + frozen"任务（幂等）
         async with AsyncSessionLocal() as reconcile_db:
             await reconcile_terminal_frozen_tasks(reconcile_db)
+            # 注册专属额度池到期清零（幂等，已清零用户无剩余）
+            from app.services.billing.grant_pool import expire_expired_grants
+            await expire_expired_grants(reconcile_db)
         _last_orphan_check_mono = time.monotonic()
 
     async with AsyncSessionLocal() as db:

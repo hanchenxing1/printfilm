@@ -18,7 +18,7 @@ export const LEGAL_DOCS: Record<'terms' | 'privacy', LegalDoc> = {
   terms: {
     slug: 'terms',
     title: '用户协议',
-    updatedAt: '2026-08-17',
+    updatedAt: '2026-10-07',
     intro:
       '欢迎使用 PRINTFILM（以下简称「本平台」）。在注册或使用本平台服务前，请仔细阅读本协议。一旦您开始使用，即视为已阅读并同意以下条款。',
     sections: [
@@ -88,7 +88,7 @@ export const LEGAL_DOCS: Record<'terms' | 'privacy', LegalDoc> = {
   privacy: {
     slug: 'privacy',
     title: '隐私政策',
-    updatedAt: '2026-08-17',
+    updatedAt: '2026-10-07',
     intro:
       'PRINTFILM 重视您的隐私。本政策说明我们如何收集、使用、存储与保护您的个人信息。使用本平台即表示您理解本政策所述处理方式。',
     sections: [
@@ -111,7 +111,20 @@ export const LEGAL_DOCS: Record<'terms' | 'privacy', LegalDoc> = {
         ],
       },
       {
-        title: '3. 存储与第三方',
+        title: '3. 数据收集与共享（Google Play 数据安全性披露）',
+        paragraphs: [
+          '为使创作功能正常运行，本应用会收集并向以下类别的服务提供商共享您在使用过程中产生的数据：',
+        ],
+        bullets: [
+          '账号信息（邮箱地址）：用于注册、登录与身份验证。共享对象：本应用后端服务器。',
+          '用户输入与生成内容（提示词、脚本、上传图片/视频/音频）：用于调用 AI 模型完成生成任务。共享对象：上游 AI 模型服务商、对象存储服务（如阿里云 OSS）、支付渠道（用于结算生成费用）。',
+          '支付信息（充值订单、扣费明细）：用于计费结算。共享对象：易支付等第三方支付渠道；我们不存储完整银行卡号。',
+          '日志与诊断信息（IP、设备型号、崩溃日志）：用于安全监控与故障排查。共享对象：仅本平台内部日志系统，不出售给第三方。',
+          '我们不会出售或为广告目的向无关第三方共享您的个人信息。',
+        ],
+      },
+      {
+        title: '4. 存储与第三方',
         paragraphs: [
           '您的媒体与创作文件可能存储于云端对象存储（如阿里云 OSS），以便预览与下载。',
           '支付由易支付等合作方处理；大模型推理由上游模型服务商完成。我们仅向其提供完成服务所必需的数据，并要求其按约定保护信息。',
@@ -119,13 +132,13 @@ export const LEGAL_DOCS: Record<'terms' | 'privacy', LegalDoc> = {
         ],
       },
       {
-        title: '4. Cookie 与本地存储',
+        title: '5. Cookie 与本地存储',
         paragraphs: [
           '为维持登录态与偏好设置，我们可能使用 Cookie 或浏览器本地存储（如 token）。您可在浏览器中清除，但这可能导致需要重新登录。',
         ],
       },
       {
-        title: '5. 您的权利',
+        title: '6. 您的权利',
         bullets: [
           '查阅、更正账号资料（可在个人中心操作）。',
           '导出或下载您有权访问的创作成果（在产品功能允许范围内）。',
@@ -134,19 +147,19 @@ export const LEGAL_DOCS: Record<'terms' | 'privacy', LegalDoc> = {
         ],
       },
       {
-        title: '6. 未成年人保护',
+        title: '7. 未成年人保护',
         paragraphs: [
           '本平台主要面向具备完全民事行为能力的用户。若您为未成年人，请在监护人指导下阅读本政策并使用服务。',
         ],
       },
       {
-        title: '7. 政策更新',
+        title: '8. 政策更新',
         paragraphs: [
           '我们可能更新本政策，并在本页公布最新版本与更新日期。重大变更时，我们会通过站内提示等方式尽量告知。',
         ],
       },
       {
-        title: '8. 联系我们',
+        title: '9. 联系我们',
         paragraphs: [
           '如对本政策有任何疑问，请访问「联系我们」或发送邮件至 ai_wyq@126.com。',
         ],
@@ -159,7 +172,7 @@ export const LEGAL_DOCS_EN: Record<'terms' | 'privacy', LegalDoc> = {
   terms: {
     slug: 'terms',
     title: 'Terms of Service',
-    updatedAt: '2026-08-17',
+    updatedAt: '2026-10-07',
     intro:
       'Welcome to PRINTFILM (“the Platform”). Please read these terms before you register or use the service. Using the Platform means you have read and agree to them.',
     sections: [
@@ -229,7 +242,7 @@ export const LEGAL_DOCS_EN: Record<'terms' | 'privacy', LegalDoc> = {
   privacy: {
     slug: 'privacy',
     title: 'Privacy Policy',
-    updatedAt: '2026-08-17',
+    updatedAt: '2026-10-07',
     intro:
       'PRINTFILM respects your privacy. This policy explains how we collect, use, store, and protect personal information. Using the Platform means you understand this processing.',
     sections: [
@@ -252,7 +265,20 @@ export const LEGAL_DOCS_EN: Record<'terms' | 'privacy', LegalDoc> = {
         ],
       },
       {
-        title: '3. Storage and third parties',
+        title: '3. Data collection & sharing (Google Play Data Safety disclosure)',
+        paragraphs: [
+          'To make the creation features work, this app collects and shares the following types of data with service providers:',
+        ],
+        bullets: [
+          'Account information (email address): used for registration, sign-in, and identity verification. Shared with: the app backend.',
+          'User input and generated content (prompts, scripts, uploaded images/video/audio): used to invoke AI models for generation tasks. Shared with: upstream AI model providers, object storage services (such as Alibaba Cloud OSS), and payment channels (for settlement of generation costs).',
+          'Payment information (top-up orders, deduction details): used for billing and settlement. Shared with: third-party payment channels such as Epay; we do not store full card numbers.',
+          'Log and diagnostic data (IP address, device model, crash logs): used for security monitoring and debugging. Shared with: our internal logging only; not sold to third parties.',
+          'We do not sell personal information or share it with unrelated third parties for advertising purposes.',
+        ],
+      },
+      {
+        title: '4. Storage and third parties',
         paragraphs: [
           'Media and project files may live in cloud object storage (such as Alibaba Cloud OSS) for preview and download.',
           'Payments go through partners such as Epay; model inference goes through upstream providers. We share only what is needed to complete the service.',
@@ -260,13 +286,13 @@ export const LEGAL_DOCS_EN: Record<'terms' | 'privacy', LegalDoc> = {
         ],
       },
       {
-        title: '4. Cookies and local storage',
+        title: '5. Cookies and local storage',
         paragraphs: [
           'We may use cookies or local storage (such as a token) to keep you signed in and remember preferences. Clearing them may require signing in again.',
         ],
       },
       {
-        title: '5. Your rights',
+        title: '6. Your rights',
         bullets: [
           'View and correct profile data in Account.',
           'Export or download creative output where the product allows.',
@@ -275,19 +301,19 @@ export const LEGAL_DOCS_EN: Record<'terms' | 'privacy', LegalDoc> = {
         ],
       },
       {
-        title: '6. Children',
+        title: '7. Children',
         paragraphs: [
           'The Platform is intended for users with full civil capacity. If you are a minor, read this policy and use the service with a guardian.',
         ],
       },
       {
-        title: '7. Policy updates',
+        title: '8. Policy updates',
         paragraphs: [
           'We may update this policy and post the latest version and date here. For material changes we will try to notify you in-product.',
         ],
       },
       {
-        title: '8. Contact',
+        title: '9. Contact',
         paragraphs: [
           'Questions: use Contact or email ai_wyq@126.com.',
         ],

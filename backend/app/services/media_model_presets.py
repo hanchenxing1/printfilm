@@ -11,6 +11,12 @@ from app.services.model_routing_config import normalize_model_name
 PRESET_MODELS: dict[LogicalModelCapability, tuple[dict[str, str], ...]] = {
     "text": (
         {
+            "id": "agnes-3.0-flash",
+            "label": "Agnes 3.0 Flash",
+            "note": "Agnes 官方文本模型（new.aiwyq.bond 网关，注册送 10 元免费额度）",
+            "pricing_hint": "默认文本模型",
+        },
+        {
             "id": "kimi-k2.6",
             "label": "Kimi K2.6",
             "note": "默认剧本/分镜，中文长上下文表现稳定",
@@ -31,6 +37,13 @@ PRESET_MODELS: dict[LogicalModelCapability, tuple[dict[str, str], ...]] = {
     ),
     "image": (
         {
+            "id": "agnes-image-2.5-flash",
+            "label": "Agnes Image 2.5 Flash",
+            "note": "Agnes 官方生图模型（1K/2K）",
+            "pricing_hint": "清晰度越高越贵",
+            "eta_hint": "约 20–60 秒/张",
+        },
+        {
             "id": "seedream-5-0-pro",
             "label": "Seedream 5.0 Pro",
             "note": "角色一致性好，适合漫剧定妆与分镜静帧",
@@ -46,6 +59,13 @@ PRESET_MODELS: dict[LogicalModelCapability, tuple[dict[str, str], ...]] = {
         },
     ),
     "video": (
+        {
+            "id": "agnes-video-2.5-flash",
+            "label": "Agnes Video 2.5 Flash",
+            "note": "Agnes 官方视频模型（4–30 秒，480p/720p）",
+            "pricing_hint": "清晰度越高越贵",
+            "eta_hint": "约 2–5 分钟/镜",
+        },
         {
             "id": "seedance-2-0",
             "label": "Seedance 2.0",

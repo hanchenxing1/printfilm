@@ -143,7 +143,7 @@ export function NarratorVoiceBindModal({ project, open, onClose, onUpdated, onEr
       }
     >
       <p className="drama-muted">
-        全局旁白音色将作为 Seedance 的 <strong>reference_audio</strong> 注入，用于所有镜头的旁白口播一致性。
+        全局旁白音色将作为 Agnes 的 <strong>reference_audio</strong> 注入，用于所有镜头的旁白口播一致性。
       </p>
 
       <div className="drama-voice-mode-tabs" style={{ marginTop: 12 }}>

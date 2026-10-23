@@ -75,12 +75,12 @@ export const enShell = {
   wechatGroup: {
     short: 'WeChat',
     open: 'Join WeChat user group',
-    title: 'printfilm user group',
+    title: 'AI Short Drama user group',
     lead: 'Short drama tips · deploy help · templates',
     idLabel: 'WeChat ID',
     copy: 'Copy',
     copied: 'Copied',
-    tip: 'Add WeChat ID gitpp88 with note “join group” and we will invite you.',
+    tip: 'Add WeChat ID wyq-kf with note “join group” and we will invite you.',
   },
   auth: {
     loginTitle: 'Back to the studio',
@@ -110,6 +110,9 @@ export const enShell = {
     forgotSent: 'If that email is registered, a reset link will be sent',
     resetSuccess: 'Password updated. Sign in with your new password',
     resetTokenMissing: 'Invalid reset link. Please request a new one',
+    agnesGuideTitle: 'Activate your free Agnes Key before signing up',
+    agnesGuideBody: 'Register at new.aiwyq.bond (new users get CNY 10 free credit), create an API Key (sk-…) in its /user console, then paste it in Admin > Settings > Model',
+    agnesGuideLink: 'Activate Agnes',
   },
   create: {
     title: 'Start creating',
@@ -187,6 +190,16 @@ export const enShell = {
     passwordChangeFailed: 'Could not change password',
     passwordChanged: 'Password updated',
     soonModule: 'This section is coming soon.',
+    agnesKeyTitle: 'Free Agnes Key',
+    agnesKeyBound: 'Bound. Ready to call Agnes models',
+    agnesKeyNotBound: 'Not bound yet',
+    agnesKeySync: 'Sync Key',
+    agnesKeySyncHint: 'Paste the Agnes API Key (sk-…) created on new.aiwyq.bond into Admin > Settings > Model',
+    agnesKeySyncOk: 'Free Agnes Key synced',
+    agnesKeyCopy: 'Copy Key',
+    agnesKeyUnbind: 'Unbind',
+    agnesKeyUnbound: 'Unbound',
+
   },
   status: {
     DRAFT: 'Draft',

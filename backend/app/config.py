@@ -31,12 +31,11 @@ class Settings(BaseSettings):
     redis_url: str = "redis://127.0.0.1:6379/0"
 
     ark_api_key: str = ""
-    ark_base_url: str = "https://www.tokenfree.com/v1"
-    # 文字模型：开源版固定 TokenFree New API，后台选模型
+    ark_base_url: str = "https://new.aiwyq.bond/v1"
+    # 文字模型：开源版统一 Agnes 官方 API（new.aiwyq.bond 网关），后台选模型
     openai_api_key: str = ""
-    openai_base_url: str = "https://www.tokenfree.com/v1"
-    # 默认模型写死为 Agnes 官方 ID；配置任意 Agnes Key 即默认全走 Agnes。
-    # 想改用其它渠道（TokenFree/豆包）可在 backend/.env 或后台「模型」覆盖。
+    openai_base_url: str = "https://new.aiwyq.bond/v1"
+    # 默认 Agnes 官方文本模型；实际以后台渠道 models + 默认定稿为准
     model_llm: str = "agnes-3.0-flash"
     model_image: str = "agnes-image-2.5-flash"
     # Seedream 4.5 接入点（可选；未配则回退 model_image）
@@ -48,8 +47,9 @@ class Settings(BaseSettings):
     seedance_duration_min: int = 4
     seedance_duration_max: int = 30
     model_audio: str = "qwen-tts-2025-05-22"
-    # Agnes AI 官方 API（apihub.agnes-ai.com）；配置 AGNES_API_KEYS 即启用 Agnes 渠道
-    agnes_base_url: str = "https://apihub.agnes-ai.com/v1"
+    # Agnes AI 引擎（官方 API，申请网址 https://new.aiwyq.bond，网关 https://new.aiwyq.bond/v1，
+    # 新用户注册送 10 元免费额度）；配置 AGNES_API_KEYS 即启用 Agnes 渠道
+    agnes_base_url: str = "https://new.aiwyq.bond/v1"
     agnes_api_key: str = ""
     # 逗号分隔多账号 key 池（429 自动轮换；N 把 key ≈ N× 吞吐）
     agnes_api_keys: str = ""
@@ -119,6 +119,16 @@ class Settings(BaseSettings):
     # Token 计费：用户扣费 = TokenFree 官方成本（billing_markup 保留兼容，不再乘）
     billing_enabled: bool = False
     billing_markup: float = 1.0
+    # 平台固定价目（估算/实扣同口径）：开启后用户扣费不再按上游成本，改按下方三档
+    billing_use_platform_pricing: bool = True
+    # LLM：billing_llm_fen_per_500 分 / 500 tokens（ceil 零头）；默认 0.01 元/500 = 1 分/500
+    billing_llm_fen_per_500: int = 1
+    # 图片：每张 billing_image_fen_per_image 分；默认 0.03 元/张（0.025 元进位到 3 分）
+    billing_image_fen_per_image: int = 3
+    # 视频：每秒 billing_video_fen_per_sec 分（ceil）；默认 0.01 元/秒 = 1 分/秒
+    billing_video_fen_per_sec: int = 1
+    # 平台价目下 TTS 语音合成是否免费（默认免费）
+    billing_tts_free: bool = True
     # token / 视频时长估价缓冲；按张生图官价不再乘此系数（否则 5 元赠金冻不住一张图）
     billing_estimate_buffer: float = 1.2
     # Yuan per million tokens (provider cost)
@@ -137,8 +147,9 @@ class Settings(BaseSettings):
     billing_est_seedream_tokens: int = 45_000
     billing_est_tts_tokens: int = 5_000
     billing_est_seedance_tokens_per_sec: int = 32_000
-    # Signup grant (fen)
-    billing_signup_grant_fen: int = 500
+    # 新用户注册专属额度（分）：进独立 grant 池，优先扣，grant 天数未用完清零
+    billing_signup_grant_fen: int = 1000
+    billing_signup_grant_days: int = 7
 
     # 用户消费里程碑弹窗（累计扣费每达 interval 分提醒一次；默认 10000 = ¥100）
     billing_user_alert_enabled: bool = True

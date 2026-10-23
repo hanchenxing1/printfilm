@@ -24,7 +24,6 @@ export const HELP_CATS: HelpCatItem[] = [
   { id: 'kepu', title: 'AI短视频', desc: '分镜流水线与成片', href: '/history' },
   { id: 'tools', title: '创作工具', desc: '文生图 / 图生图 / 视频', href: '/tools' },
   { id: 'settings', title: '个人中心', desc: '项目 · 记录 · 下载', href: '/settings?tab=tools' },
-  { id: 'billing', title: '充值说明', desc: '按量计费，余额永久有效', href: '/pricing' },
 ]
 
 export const HELP_GUIDE_STEPS: HelpGuideStep[] = [

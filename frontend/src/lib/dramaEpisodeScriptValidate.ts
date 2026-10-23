@@ -149,7 +149,7 @@ export function validateDramaFragmentScript(content: string): DramaScriptIssue[]
   if (total > DRAMA_SHOT_DURATION_HARD_MAX) {
     issues.push({
       level: 'error',
-      message: `本镜 @duration 合计 ${total}s，超过 Seedance 上限 ${DRAMA_SHOT_DURATION_HARD_MAX}s`,
+      message: `本镜 @duration 合计 ${total}s，超过 Agnes 上限 ${DRAMA_SHOT_DURATION_HARD_MAX}s`,
     })
   } else if (total > FRAGMENT_CONTENT_DURATION_MAX) {
     issues.push({

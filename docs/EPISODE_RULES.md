@@ -167,8 +167,6 @@ LLM 分镜**禁止**直接输出 `@asset` / `@duration` / `【字幕】【BGM】
 
 当前**不绑定、不提交** `reference_audio`。口播由 Seedance `generate_audio` 按对白/旁白自行发挥。角色图仍作 `reference_image`。
 
-模型路由到 Agnes 时不经过 `generate_audio`（无该参数），口播 / 字幕由视频模型自行输出，见 §4.5 与 §6.1。
-
 | 规则 | 说明 |
 |------|------|
 | 要对白的角色 | 不强制试听；写清对白即可 |
@@ -195,20 +193,6 @@ LLM 分镜**禁止**直接输出 `@asset` / `@duration` / `【字幕】【BGM】
 详见 [SEEDANCE_2_5.md](./SEEDANCE_2_5.md)。
 
 ---
-
-### 4.5 Agnes 引擎适配（视频模型替代路径）
-
-顶栏模型路由到 Agnes（模型 ID 以 `agnes-` 开头，默认 `agnes-video-2.5-flash`）时，提交内容与 Seedance 契约不同：
-
-| 规则 | 说明 |
-|------|------|
-| 提交 payload | 仅 `model / prompt / mode / seconds / size / aspect_ratio / n`；无 `generate_audio`、`watermark`、`return_last_frame` 字段 |
-| 参考图 | 每次最多 5 张（Seedance 为 30） |
-| 时长 | 钳制 4–12s，镜内合计超过 12s 也只按 12s 提交 |
-| 分辨率 | 固定 720P，不接受顶栏 `resolution` 参数 |
-| 音频 | 无 `reference_audio` / 音色绑定；口播与字幕由视频模型自行输出 |
-| 尾帧 | API 不返回尾帧，成片下载后由 ffmpeg 本地抽取 `lastFrameUrl`（镜间衔接规则不变，见 §6） |
-| 补图 | 本镜缺参考图时先经 Seedream 自动补图，补图失败则降级为纯提示词生成 |
 
 ## 5. 运镜与提示词写法（分集内可用）
 
@@ -255,18 +239,7 @@ AI 重新分镜（`fragment_plan`）须按上述公式输出画面行；单镜�
 3. 角色形象 / 场景 / 道具 → 参考图序号  
 4. 正文（已替换 asset / duration）  
 
-（角色/旁白音色 → 参考音频序号：暂关）
-
-### 6.1 Agnes 分支（模型路由为 agnes-* 时）
-
-| 字段 | Agnes 行为 |
-|------|-----------|
-| `content[]` | 仅提取 `text` 与 `image_url`（参考图 ≤5 张），`reference_audio` 项被忽略 |
-| `duration` | 钳制 4–12s（`seconds`） |
-| `ratio` / `resolution` | `ratio` 映射为 `aspect_ratio`；`resolution` 不生效，固定 720P |
-| `generate_audio` / `watermark` / `return_last_frame` | 不接收；配音与字幕由模型自行输出，尾帧下载后本地抽取 |
-| 任务 | `task_id` 形如 `agnes:<keyidx>:<video_id>`，轮询走 host 根 `/agnesapi`，同账号池 key 通用 |
-  
+（角色/旁白音色 → 参考音频序号：暂关）  
 
 ---
 

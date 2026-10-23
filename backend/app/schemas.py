@@ -31,6 +31,9 @@ class UserOut(BaseModel):
     quota_left: int
     balance_fen: int = 0
     frozen_fen: int = 0
+    grant_fen: int = 0
+    frozen_grant_fen: int = 0
+    grant_expire_at: "datetime | None" = None
     plan: str = "free"
     role: str = "user"
     avatar_url: str = ""

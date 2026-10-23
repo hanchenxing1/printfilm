@@ -14,7 +14,6 @@ from app.models import ToolRun, User
 from app.schemas_tools import ToolRunListOut, ToolRunOut, ToolRunRecordOut, ToolTaskOut
 from app.services.billing import run_billed_ephemeral_deferred, settle_deferred_video_poll
 from app.services.studio_tools import (
-    duration_seconds,
     enqueue_image_tool,
     get_tool_run,
     list_tool_runs,
@@ -50,15 +49,13 @@ async def run_tool(
 ) -> ToolRunOut:
     tid = (tool_id or "").strip()
     saved: list[Path] = []
-    # 时长归一化：前端芯片传 "5s"/"10s"/"15s"，统一转纯数字字符串（计费估算做 float() 需要数字）
-    dur_norm = str(duration_seconds(duration or None))
     tool_params = {
         "negative": negative,
         "ratio": ratio,
         "strength": strength,
         "mode": mode,
         "pack": pack,
-        "duration": dur_norm,
+        "duration": duration,
         "motion": motion,
     }
     try:
@@ -94,7 +91,7 @@ async def run_tool(
                     tool_id=tid,
                     prompt=prompt,
                     ratio=ratio or None,
-                    duration_raw=dur_norm or None,
+                    duration_raw=duration or None,
                     motion=motion or None,
                     files=saved,
                 )

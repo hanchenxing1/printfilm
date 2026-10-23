@@ -107,6 +107,8 @@
   color: var(--pf-ink);
 }
 
+
+
 .pf-nav-lang {
   display: inline-flex;
   align-items: stretch;
@@ -431,6 +433,8 @@
   flex-wrap: wrap;
   gap: 0.75rem;
 }
+
+
 
 .pf-land-frames {
   display: grid;
@@ -1061,6 +1065,31 @@
   margin-top: 0.2rem;
   color: #4b5563;
   font-variant-numeric: tabular-nums;
+}
+
+.pf-drama-card-gen-btn {
+  margin-top: 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+  border: 1px solid #d6e35a;
+  background: #e8f06a;
+  color: #1a1a1a;
+  border-radius: 999px;
+  padding: 0.42rem 0.7rem;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pf-drama-card-gen-btn:hover:not(:disabled) {
+  background: #dce64e;
+}
+.pf-drama-card-gen-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .pf-empty-state {
@@ -5123,6 +5152,406 @@ button.pf-shot-editable:disabled {
   color: #b45309;
 }
 
+/* ===== 璁㈤槄涓庝綑棰濋潰鏉匡紙璁剧疆椤碉級 ===== */
+.pf-sub-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.pf-sub-panel.is-panel {
+  margin-top: 0;
+}
+
+.pf-sub-wallet {
+  background: #fff;
+  border: 1px solid var(--pf-line);
+  border-radius: var(--pf-radius);
+  padding: 1.1rem;
+  box-shadow: var(--pf-shadow);
+}
+
+.pf-sub-wallet-head {
+  margin-bottom: 0.85rem;
+}
+
+.pf-sub-wallet-head h3 {
+  margin: 0 0 0.2rem;
+  font-size: 1rem;
+}
+
+.pf-sub-wallet-head p {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.pf-sub-balance {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+.pf-sub-balance-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--pf-line);
+  border-radius: 10px;
+  background: #fafbfc;
+}
+
+.pf-sub-balance-item strong {
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-sub-pay-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.pf-sub-pay-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--pf-line);
+  border-radius: 999px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.pf-sub-pay-tab.is-active {
+  border-color: var(--pf-lime, #65a30d);
+  background: #f7fee7;
+}
+
+.pf-sub-hint {
+  margin: 0.5rem 0;
+  color: #15803d;
+  font-size: 0.85rem;
+}
+
+.pf-sub-skus {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pf-sub-sku {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--pf-line);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.pf-sub-sku.is-recommended {
+  border-color: var(--pf-lime, #65a30d);
+  background: #f7fee7;
+}
+
+.pf-sub-sku-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.pf-sub-sku-info strong {
+  font-size: 0.95rem;
+}
+
+.pf-sub-sku-info em {
+  font-style: normal;
+  font-size: 0.78rem;
+}
+
+.pf-sub-sku-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pf-sub-sku-price {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.1rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-sub-sku-price i {
+  font-style: normal;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.pf-sub-sku-badge {
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--pf-lime, #65a30d);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.pf-sub-free {
+  padding: 0.8rem 0.9rem;
+  border: 1px dashed var(--pf-line);
+  border-radius: 10px;
+  background: #fafbfc;
+  font-size: 0.88rem;
+}
+
+.pf-sub-orders {
+  margin-top: 0.25rem;
+}
+
+.pf-sub-orders-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.pf-sub-orders-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.pf-sub-order-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pf-sub-order {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.65rem 0.2rem;
+  border-bottom: 1px solid var(--pf-line);
+}
+
+.pf-sub-order:last-child {
+  border-bottom: none;
+}
+
+.pf-sub-order-main {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.pf-sub-order-main em {
+  font-style: normal;
+}
+
+.pf-sub-order-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pf-sub-order-meta em {
+  font-style: normal;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-sub-order-status {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.pf-sub-order-status.is-paid {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.pf-sub-order-status.is-pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.pf-sub-order-status.is-closed {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+
+/* ===== 订阅档位与当前订阅（设置页） ===== */
+.pf-sub-status {
+  background: #fff;
+  border: 1px solid var(--pf-line);
+  border-radius: var(--pf-radius);
+  padding: 1.1rem;
+  box-shadow: var(--pf-shadow);
+}
+
+.pf-sub-status-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.pf-sub-status-main {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pf-sub-status-main strong {
+  font-size: 1.05rem;
+}
+
+.pf-sub-status-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  font-size: 0.82rem;
+}
+
+.pf-sub-status-meta em {
+  font-style: normal;
+  font-weight: 600;
+}
+
+.pf-sub-plans {
+  background: #fff;
+  border: 1px solid var(--pf-line);
+  border-radius: var(--pf-radius);
+  padding: 1.1rem;
+  box-shadow: var(--pf-shadow);
+}
+
+.pf-sub-plans > .pf-sub-wallet-head {
+  margin-bottom: 0.9rem;
+}
+
+.pf-sub-plan + .pf-sub-plan {
+  margin-top: 1.1rem;
+}
+
+.pf-sub-plan-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.pf-sub-plan-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+}
+
+@media (max-width: 900px) {
+  .pf-sub-plan-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.pf-sub-plan-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--pf-line);
+  border-radius: 10px;
+  background: #fafbfc;
+}
+
+.pf-sub-plan-card.is-recommended {
+  border-color: var(--pf-lime, #65a30d);
+  background: #f7fee7;
+}
+
+.pf-sub-plan-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.pf-sub-plan-card-head strong {
+  font-size: 0.92rem;
+}
+
+.pf-sub-plan-card-head .pf-sub-sku-price {
+  font-size: 1rem;
+}
+
+.pf-sub-sku-price em {
+  font-style: normal;
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--pf-muted, #64748b);
+}
+
+.pf-sub-perks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+}
+
+.pf-sub-perks li {
+  padding-left: 0.85rem;
+  position: relative;
+}
+
+.pf-sub-perks li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--pf-lime, #65a30d);
+  font-weight: 700;
+}
+
+.pf-sub-perks-note {
+  color: var(--pf-muted, #64748b);
+  font-size: 0.74rem;
+}
+
+.pf-sub-perks-note::before {
+  content: '·';
+}
+
+.pf-sub-perk-used {
+  font-style: normal;
+  font-size: 0.72rem;
+  color: var(--pf-lime, #65a30d);
+  font-weight: 600;
+}
+
+.pf-sub-plan-card .pf-btn {
+  margin-top: auto;
+  justify-content: center;
+}
 .pf-api-create {
   display: flex;
   gap: 0.6rem;
@@ -6928,6 +7357,8 @@ button.pf-shot-editable:disabled {
     display: none;
   }
 
+
+
   .pf-nav-burger {
     display: inline-flex;
   }
@@ -7239,3 +7670,519 @@ button.pf-shot-editable:disabled {
     justify-content: center;
   }
 }
+
+/* ===== 定价页：充值/订阅合并模块（2026-10-02） ===== */
+.pf-pricing-sku-grid-mods {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* 快捷充值档位 */
+.pf-pricing-amount-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.pf-pricing-amount-opt {
+  appearance: none;
+  border: 1.5px solid var(--pf-line);
+  border-radius: 10px;
+  background: #fff;
+  padding: 0.45rem 0.2rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.pf-pricing-amount-opt:hover:not(.is-active) {
+  border-color: var(--pf-ink);
+}
+
+.pf-pricing-amount-opt.is-active {
+  border-color: var(--pf-lime);
+  background: #f7fee7;
+  color: var(--pf-lime-ink, #3f5c10);
+}
+
+/* 自定义金额输入 */
+.pf-pricing-custom-amount {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.7rem;
+}
+
+.pf-pricing-custom-amount-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--pf-muted);
+}
+
+.pf-pricing-custom-amount-box {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--pf-line);
+  border-radius: 10px;
+  background: #fff;
+  padding: 0.45rem 0.7rem;
+  gap: 0.1rem;
+}
+
+.pf-pricing-custom-amount-box:focus-within {
+  border-color: var(--pf-lime);
+}
+
+.pf-pricing-custom-amount-box .yen {
+  font-weight: 700;
+  color: var(--pf-ink);
+}
+
+.pf-pricing-custom-amount-box input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: transparent;
+  color: var(--pf-ink);
+}
+
+.pf-pricing-custom-amount-box input::placeholder {
+  font-weight: 500;
+  color: var(--pf-muted);
+}
+
+/* 周期自选（Plus/Pro） */
+.pf-pricing-period-picker {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin-bottom: 0.7rem;
+}
+
+.pf-pricing-period-opt {
+  appearance: none;
+  border: 1.5px solid var(--pf-line);
+  border-radius: 10px;
+  background: #fff;
+  padding: 0.4rem 0.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.pf-pricing-period-opt em {
+  font-style: normal;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--pf-muted);
+}
+
+.pf-pricing-period-opt:hover:not(.is-active) {
+  border-color: var(--pf-ink);
+}
+
+.pf-pricing-period-opt.is-active {
+  border-color: var(--pf-lime);
+  background: #f7fee7;
+}
+
+.pf-pricing-period-opt.is-active em {
+  color: var(--pf-lime-ink, #3f5c10);
+}
+
+.pf-pricing-sku-period {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--pf-muted);
+}
+
+.pf-pricing-sku-card.is-sub {
+  min-height: 260px;
+}
+
+/* ===== 设置页：订阅面板同款交互 ===== */
+.pf-sub-amount-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin-bottom: 0.55rem;
+}
+
+.pf-sub-amount-opt {
+  appearance: none;
+  border: 1.5px solid var(--pf-line);
+  border-radius: 9px;
+  background: #fff;
+  padding: 0.4rem 0.2rem;
+  font-size: 0.86rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.pf-sub-amount-opt:hover:not(.is-active) {
+  border-color: var(--pf-ink);
+}
+
+.pf-sub-amount-opt.is-active {
+  border-color: var(--pf-lime);
+  background: #f7fee7;
+}
+
+.pf-sub-custom-amount {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.6rem;
+}
+
+.pf-sub-custom-amount-box {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--pf-line);
+  border-radius: 9px;
+  background: #fff;
+  padding: 0.4rem 0.6rem;
+  gap: 0.1rem;
+}
+
+.pf-sub-custom-amount-box:focus-within {
+  border-color: var(--pf-lime);
+}
+
+.pf-sub-custom-amount-box .yen {
+  font-weight: 700;
+  color: var(--pf-ink);
+}
+
+.pf-sub-custom-amount-box input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: transparent;
+  color: var(--pf-ink);
+}
+
+.pf-sub-custom-amount-box input::placeholder {
+  font-weight: 500;
+  color: var(--pf-muted);
+}
+
+.pf-sub-sku-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.pf-sub-plan {
+  margin-bottom: 0.9rem;
+}
+
+.pf-sub-plan-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--pf-ink);
+}
+
+.pf-sub-period-picker {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin-bottom: 0.55rem;
+}
+
+.pf-sub-period-opt {
+  appearance: none;
+  border: 1.5px solid var(--pf-line);
+  border-radius: 9px;
+  background: #fff;
+  padding: 0.35rem 0.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.08rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.pf-sub-period-opt em {
+  font-style: normal;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--pf-muted);
+}
+
+.pf-sub-period-opt:hover:not(.is-active) {
+  border-color: var(--pf-ink);
+}
+
+.pf-sub-period-opt.is-active {
+  border-color: var(--pf-lime);
+  background: #f7fee7;
+}
+
+.pf-sub-period-opt.is-active em {
+  color: var(--pf-lime-ink, #3f5c10);
+}
+
+.pf-sub-plan-card {
+  border: 1px solid var(--pf-line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.8rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.pf-sub-plan-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.pf-sub-perks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+  color: var(--pf-muted);
+}
+
+.pf-sub-perks-note {
+  color: var(--pf-muted);
+}
+
+@media (max-width: 760px) {
+  .pf-pricing-sku-grid-mods {
+    grid-template-columns: 1fr;
+  }
+
+  .pf-pricing-amount-options,
+  .pf-pricing-period-picker,
+  .pf-sub-amount-options,
+  .pf-sub-period-picker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+.pf-agnes-card {
+  margin: 1rem 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--pf-line, #e5e7eb);
+  border-left: 3px solid var(--pf-lime, #b6ff00);
+  border-radius: 12px;
+  background: #fbfff2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+
+.pf-agnes-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+
+.pf-agnes-card > p {
+  margin: 0;
+}
+
+
+.pf-agnes-msg {
+  margin: 0;
+  color: #027a48;
+  font-size: 0.9rem;
+}
+
+/* ===== 双端在线更新提示浮层 ===== */
+.pf-appupdate-root {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+  pointer-events: none;
+}
+
+.pf-appupdate-card {
+  pointer-events: auto;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: #fff;
+  color: #1a1a1a;
+  border: 1px solid #1a1a1a;
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  animation: pf-appupdate-in 0.24s ease-out;
+}
+
+@keyframes pf-appupdate-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pf-appupdate-mark {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #eaffb8;
+  color: #1a1a1a;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.pf-appupdate-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pf-appupdate-body strong {
+  display: block;
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+}
+
+.pf-appupdate-body p {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #444;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.pf-appupdate-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.pf-appupdate-btn {
+  border: 1px solid #1a1a1a;
+  background: transparent;
+  color: #1a1a1a;
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+.pf-appupdate-btn:hover {
+  background: #f5f5f5;
+}
+
+.pf-appupdate-btn-primary {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+.pf-appupdate-btn-primary:hover {
+  background: #333;
+}
+
+@media (max-width: 480px) {
+  .pf-appupdate-card {
+    flex-wrap: wrap;
+  }
+  .pf-appupdate-actions {
+    flex-direction: row;
+    width: 100%;
+  }
+  .pf-appupdate-btn {
+    flex: 1;
+  }
+}
+
+/* ===== Mobile top-nav: keep the sticky bar minimal, move secondary items into the drawer ===== */
+/* 手机窄视口（<=700px）下顶栏右区原来堆了 5 个元素（语言/帮助/头像/开始创作/汉堡），
+   393px 视口放不下 → 「Start creating」被右缘裁切、汉堡被挤出。
+   这里把 语言/帮助/开始创作 收进汉堡 drawer（入口不丢），顶栏只留 logo + 头像/登录 + 汉堡。 */
+@media (max-width: 700px) {
+  .pf-nav {
+    padding: 0 0.9rem;
+    gap: 0.5rem;
+  }
+
+  .pf-nav-right {
+    gap: 0.5rem;
+  }
+
+  /* 顶栏隐藏次要入口（在 drawer 中保留） */
+  .pf-nav-right .pf-nav-lang {
+    display: none;
+  }
+
+  .pf-nav-right > .pf-nav-help-btn {
+    display: none;
+  }
+
+  .pf-nav-right > .pf-btn {
+    display: none;
+  }
+
+  /* 汉堡 drawer 顶部：语言 / 帮助 / 开始创作，右对齐、窄屏换行 */
+  .pf-nav-drawer-top {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-bottom: 0.6rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid var(--pf-line);
+  }
+
+  .pf-nav-drawer-top .pf-btn {
+    display: inline-flex;
+  }
+}
+

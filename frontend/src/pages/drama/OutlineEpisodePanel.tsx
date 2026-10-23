@@ -1,5 +1,5 @@
 /** 剧情大纲：左栏分集目录 + 右栏本集创意/摘要/剧本（对齐截图样式） */
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   BookOpen,
@@ -14,8 +14,12 @@ import {
   RefreshCw,
   Maximize2,
   Pencil,
+  Sparkles,
 } from 'lucide-react'
+import { api } from '../../api'
 import { dramaApi, resolveDramaMediaUrl, type DramaEpisode, type DramaEpisodeBody, type DramaProject, type DramaScript } from '../../api/drama'
+import { enqueueEpisodeVideoJobs } from '../../lib/dramaGenQueue'
+import { ensureProjectAssetImagesBeforeVideo } from '../../lib/dramaBatchAssetImages'
 import { FragmentPlanSkillModal } from '../../components/drama/FragmentPlanSkillModal'
 import { dialog } from '../../lib/dialog'
 import {
@@ -209,6 +213,10 @@ export function OutlineEpisodePanel({
   const [generatingEpisodeNumber, setGeneratingEpisodeNumber] = useState<number | null>(null)
   const [confirming, setConfirming] = useState(false)
   const [enterSkillOpen, setEnterSkillOpen] = useState(false)
+  const [planAllSkillOpen, setPlanAllSkillOpen] = useState(false)
+  const [planningAll, setPlanningAll] = useState(false)
+  const chosenModeRef = useRef<'skip' | 'overwrite'>('skip')
+  const [subActive, setSubActive] = useState(false)
   const [localError, setLocalError] = useState('')
   const [localNotice, setLocalNotice] = useState('')
   const [scriptModalOpen, setScriptModalOpen] = useState(false)
@@ -238,6 +246,20 @@ export function OutlineEpisodePanel({
     setLocalNotice('')
     setScriptModalOpen(false)
   }, [selected?.episodeNumber])
+
+  // 一键生成全集分镜仅订阅用户可见（复用现有订阅状态接口，非订阅/未登录一律隐藏）
+  useEffect(() => {
+    let cancelled = false
+    api
+      .subscriptionStatus()
+      .then((s) => {
+        if (!cancelled) setSubActive(Boolean(s?.active))
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   // 拉取已切分分集，用首镜封面/成片作目录缩略图
   useEffect(() => {
@@ -519,6 +541,125 @@ export function OutlineEpisodePanel({
     }
   }
 
+  // 一键生成全部分镜视频（仅订阅用户可见）：逐集确认剧本 -> 生成分镜视频入队
+  // mode: 'skip' 只生成尚未出片的分镜；'overwrite' 全部分镜重新生成（旧片保留为历史版本）
+  async function handleGenerateAllFragments(skillIds: number[], mode: 'skip' | 'overwrite') {
+    setPlanningAll(true)
+    setLocalError('')
+    setLocalNotice('')
+    // 一键生成视频前先检查资产库参考图：无参考图或不全则先生成全部参考图，完成后再入队分镜视频
+    try {
+      const ensured = await ensureProjectAssetImagesBeforeVideo({ projectId })
+      if (!ensured.proceeded) {
+        setPlanningAll(false)
+        setLocalNotice(ensured.cancelled ? '已取消生成视频' : '参考图未齐全，已中止视频生成')
+        return
+      }
+      if (ensured.queued > 0) {
+        setLocalNotice(`已生成 ${ensured.queued} 张参考图，继续生成分镜视频`)
+      }
+    } catch (err) {
+      setPlanningAll(false)
+      setLocalError(err instanceof Error ? err.message : '生成参考图失败')
+      return
+    }
+    const numbers = directoryEpisodes
+      .map((ep) => Number(ep.episodeNumber) || 0)
+      .filter((n) => n > 0)
+    let queuedFragCount = 0
+    let skippedFragCount = 0
+    let noFragmentEpisodes: number[] = []
+    const failed: number[] = []
+    for (const num of numbers) {
+      try {
+        const res = await dramaApi.confirmEpisodeFromScript({
+          project_id: projectId,
+          episode_number: num,
+        })
+        const ep = res.episode
+        const frags = [...(ep.fragments || [])].sort(
+          (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+        )
+        if (frags.length === 0) {
+          // 尚无分镜：先入队规则分镜，本集视频待分镜就绪后补生成
+          try {
+            await dramaApi.planEpisodeFragments(ep.id, {
+              force: true,
+              fallback_rules: true,
+              skill_ids: skillIds,
+            })
+          } catch {
+            // 单集分镜入队失败沿用既有行为：不阻断后续集
+          }
+          noFragmentEpisodes.push(num)
+          continue
+        }
+        const targetIds =
+          mode === 'overwrite'
+            ? frags.map((f) => f.id)
+            : frags.filter((f) => !(f.video || '').trim()).map((f) => f.id)
+        if (targetIds.length === 0) {
+          skippedFragCount += frags.length
+          continue
+        }
+        const genResult = await dramaApi.generateEpisode(ep.id, targetIds)
+        const queuedIds =
+          Array.isArray(genResult.fragment_ids) && genResult.fragment_ids.length > 0
+            ? genResult.fragment_ids
+            : targetIds
+        skippedFragCount += frags.length - targetIds.length
+        queuedFragCount += queuedIds.length
+        enqueueEpisodeVideoJobs({
+          projectId,
+          episodeId: ep.id,
+          episodeName: ep.name,
+          fragments: frags.map((f) => ({ id: f.id, sort_order: f.sort_order ?? 0 })),
+          fragmentIds: queuedIds,
+        })
+      } catch {
+        failed.push(num)
+      }
+    }
+    setPlanningAll(false)
+    if (failed.length > 0) {
+      setLocalError(`第 ${failed.join('、')} 集处理失败（剧本不足等原因），可单独进入该集重试`)
+    } else {
+      const parts: string[] = []
+      if (queuedFragCount > 0)
+        parts.push(`已入队 ${queuedFragCount} 个分镜视频生成${mode === 'overwrite' ? '（全部重做）' : ''}`)
+      if (skippedFragCount > 0) parts.push(`跳过已出片 ${skippedFragCount} 个`)
+      if (noFragmentEpisodes.length > 0)
+        parts.push(`第 ${noFragmentEpisodes.join('、')} 集尚无分镜，已入队分镜任务（完成后请重新点击生成视频）`)
+      setLocalNotice(parts.length > 0 ? parts.join('；') : '没有需要生成的分镜视频')
+    }
+  }
+
+  // 点击「一键生成全部分镜视频」：先检查已出片分镜，有则弹框让用户选择覆盖/跳过
+  async function handleOpenGenerateAllFragments() {
+    let completed = 0
+    try {
+      const rows = await dramaApi.listEpisodes(projectId)
+      for (const ep of rows) {
+        completed += (ep.fragments || []).filter((f) => (f.video || '').trim()).length
+      }
+    } catch {
+      completed = 0
+    }
+    if (completed > 0) {
+      const overwrite = await dialog.confirm({
+        title: '已检测到生成完成的分镜视频',
+        message: `共 ${completed} 个分镜已有成片。「覆盖重做」：全部分镜按当前画幅/清晰度重新生成，旧成片保留为历史版本。「跳过已有」：只生成尚未出片的分镜，已有成片不受影响。`,
+        confirmText: '覆盖重做',
+        cancelText: '跳过已有',
+        tone: 'danger',
+      })
+      chosenModeRef.current = overwrite ? 'overwrite' : 'skip'
+    } else {
+      chosenModeRef.current = 'skip'
+    }
+    setPlanAllSkillOpen(true)
+  }
+
   async function handleSaveScenes(nextBody: string) {
     if (!selected?.episodeNumber) return
     setSaving(true)
@@ -594,23 +735,39 @@ export function OutlineEpisodePanel({
     : ''
 
   const directory = (
+    <>
     <aside className="drama-outline-sidebar">
       <div className="drama-outline-sidebar-head">
         <div>
           <h3>分集目录</h3>
           <p>共 {directoryEpisodes.length} 集</p>
         </div>
-        {summaryReady ? (
-          <button
-            type="button"
-            className="drama-outline-add-btn"
-            disabled={!canAdd}
-            onClick={() => void handleAddEpisode()}
-          >
-            <Plus size={14} strokeWidth={2.5} />
-            {adding ? '添加中' : '加集'}
-          </button>
-        ) : null}
+        <div className="drama-outline-sidebar-actions">
+          {summaryReady ? (
+            <button
+              type="button"
+              className="drama-outline-add-btn"
+              disabled={!canAdd}
+              onClick={() => void handleAddEpisode()}
+            >
+              <Plus size={14} strokeWidth={2.5} />
+              {adding ? '添加中' : '加集'}
+            </button>
+          ) : null}
+          {subActive ? (
+            <button
+              type="button"
+              className="drama-outline-add-btn"
+              disabled={
+                planningAll || generateBusy || !summaryReady || directoryEpisodes.length === 0
+              }
+              onClick={() => void handleOpenGenerateAllFragments()}
+            >
+              <Sparkles size={14} strokeWidth={2.5} />
+              {planningAll ? '排队中…' : '一键生成全部分镜视频'}
+            </button>
+          ) : null}
+        </div>
       </div>
       <ul className="drama-outline-ep-list">
         {directoryEpisodes.map((ep) => {
@@ -661,6 +818,17 @@ export function OutlineEpisodePanel({
         })}
       </ul>
     </aside>
+    <FragmentPlanSkillModal
+      open={planAllSkillOpen}
+      title="一键生成全部分镜视频"
+      message="将按集确认剧本并生成分镜视频入队；尚无分镜的集先自动切分分镜再排队生成。"
+      confirmText={planningAll ? '排队中…' : '生成分镜视频'}
+      onCancel={() => {
+        if (!planningAll) setPlanAllSkillOpen(false)
+      }}
+      onConfirm={(skillIds) => void handleGenerateAllFragments(skillIds, chosenModeRef.current)}
+    />
+    </>
   )
 
   const bodies = !selected ? (

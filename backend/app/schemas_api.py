@@ -21,24 +21,6 @@ class ApiKeyCreatedOut(ApiKeyOut):
     secret: str
 
 
-class AgnesKeyCreateRequest(BaseModel):
-    """用户在个人中心添加的 Agnes API Key（加密入库）。"""
-
-    name: str = Field(default="默认 Agnes Key", max_length=64)
-    key: str = Field(min_length=8, max_length=256)
-
-
-class AgnesKeyOut(BaseModel):
-    id: int
-    name: str
-    key_prefix: str
-    active: bool
-    created_at: datetime | None = None
-    last_used_at: datetime | None = None
-
-    model_config = {"from_attributes": True}
-
-
 class V1ImageGenerateRequest(BaseModel):
     prompt: str = Field(min_length=1, max_length=4000)
     negative: str = Field(default="", max_length=2000)

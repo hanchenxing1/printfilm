@@ -140,6 +140,24 @@ async def record_seedance_video_usage(
     if upstream_cost is not None and raw is not None:
         raw["usage"] = {**(raw.get("usage") or {}), "cost_fen": upstream_cost}
 
+    # 平台价目按视频时长实扣：duration_sec 写进 raw（上游 usage 优先，回退 fallback）
+    _dur = 0.0
+    _ru = raw_usage if isinstance(raw_usage, dict) else {}
+    for _dk in ("duration", "seconds", "duration_sec"):
+        try:
+            _v = float(_ru.get(_dk) or 0)
+        except (TypeError, ValueError):
+            _v = 0.0
+        if _v > 0:
+            _dur = _v
+            break
+    if _dur <= 0 and fallback_duration_sec:
+        _dur = float(fallback_duration_sec)
+    if _dur > 0:
+        if raw is None:
+            raw = {"usage": {}}
+        raw.setdefault("usage", {})["duration_sec"] = _dur
+
     provider = "kie" if (
         (isinstance(raw, dict) and (raw.get("provider") == "kie" or raw.get("kie_task_id")))
         or (isinstance(raw_usage, dict) and (raw_usage.get("provider") == "kie" or raw_usage.get("kie_task_id")))

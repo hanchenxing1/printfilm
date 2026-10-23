@@ -45,7 +45,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const t = useCallback<TFunction>(
     (path, vars) => {
       const raw = lookupMessage(m, path)
-      if (!raw) return path
+      if (raw === undefined) return path
       return interpolate(raw, vars)
     },
     [m],

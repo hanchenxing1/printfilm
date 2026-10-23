@@ -228,8 +228,8 @@ export function EpisodeEditHeaderControls({
           type="button"
           className="fc-gen-opt-btn drama-seedance-help-btn"
           disabled={disabled}
-          title="Seedance 传值与使用规则"
-          aria-label="Seedance 传值与使用规则"
+          title="Agnes 传值与使用规则"
+          aria-label="Agnes 传值与使用规则"
           onClick={() => setRulesOpen(true)}
         >
           <CircleHelp size={14} strokeWidth={1.8} />

@@ -51,6 +51,10 @@ class User(Base):
     phone: Mapped[str] = mapped_column(String(32), default="")
     # 用户消费里程碑告警：上次已提醒的累计扣费档位（分）
     billing_alert_last_milestone_fen: Mapped[int] = mapped_column(Integer, default=0)
+    # 注册专属额度池（优先于 balance 扣）：可用 / 冻结 / 到期时间
+    grant_fen: Mapped[int] = mapped_column(Integer, default=0)
+    frozen_grant_fen: Mapped[int] = mapped_column(Integer, default=0)
+    grant_expire_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     projects: Mapped[list["Project"]] = relationship(back_populates="owner")

@@ -240,8 +240,8 @@ export function CanvasNodeGeneratePanel({
           <button
             type="button"
             className="fc-generate-help"
-            title="Seedance 传值与使用规则"
-            aria-label="Seedance 传值与使用规则"
+            title="Agnes 传值与使用规则"
+            aria-label="Agnes 传值与使用规则"
             disabled={isBusy}
             onClick={() => setRulesOpen(true)}
           >

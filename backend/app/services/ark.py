@@ -469,7 +469,7 @@ class ArkGateway:
         logical_id = resolve_logical_model_id(capability, model_id)
         return resolve_logical_model(capability, logical_id)
 
-    # ---------- Agnes AI 官方 API（apihub.agnes-ai.com）分支 ----------
+    # ---------- Agnes AI 引擎（官方 API：new.aiwyq.bond/v1）分支 ----------
 
     def _agnes_active(self) -> bool:
         return agnes_client.get_agnes_client() is not None

@@ -309,7 +309,7 @@ export function CharacterVoiceBindModal({
       }
     >
       <p className="drama-muted">
-        为「{asset.name || '角色'}」选择漫剧音色资产。音色将随分镜 Seedance 生成作为 reference_audio 提交。
+        为「{asset.name || '角色'}」选择漫剧音色资产。音色将随分镜 Agnes 生成作为 reference_audio 提交。
       </p>
 
       <div className="drama-voice-mode-tabs">

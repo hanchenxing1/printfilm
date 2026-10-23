@@ -107,6 +107,15 @@ export function formatDramaGenError(raw: string | null | undefined): DramaGenErr
     }
   }
 
+  // 上游 agnes 免费额度 429（TokenFree/Seedream 通道）→ 中文引导订阅会员
+  if (/Seedream error 429|rate_limit_exceeded|reached the API rate limit for free users/i.test(text)) {
+    return {
+      title: '免费额度已用完',
+      message: '抱歉您的免费额度已用完，请在首页订阅会员或明天再试。',
+      suggestion: '可在首页「会员/订阅」升级后继续生成；未订阅的话可等待次日免费额度恢复后再试。',
+    }
+  }
+
   if (isBillingError(text)) {
     return {
       title: '余额不足',
@@ -224,6 +233,15 @@ export function formatDramaGenError(raw: string | null | undefined): DramaGenErr
           : '上游拒绝了参考图：File type not supported（常见原因是 SVG 占位图或非位图）。',
       suggestion:
         '检查本镜引用的角色/场景/道具封面是否为 PNG/JPG/WEBP。若仍是 SVG 占位图，请对该资产重新生图或上传位图后再生成视频。',
+    }
+  }
+
+  // 视频队列已满（Seedance 503 / video_queue_full）→ 中文引导开通订阅
+  if (/视频队列已满|video_queue_full/i.test(text)) {
+    return {
+      title: '视频队列已满',
+      message: '视频队列已满，请稍后重试或开通订阅享受优先时长额度。',
+      suggestion: '可在首页订阅会员获得优先时长额度；未订阅的话请稍后再重新生成该分镜。',
     }
   }
 

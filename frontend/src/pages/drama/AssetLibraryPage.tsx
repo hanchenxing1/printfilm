@@ -18,6 +18,7 @@ import { readAssetVoiceBinding } from './CharacterVoiceBindModal'
 import { DramaImageLightbox } from './DramaImageLightbox'
 import { filterDramaLibraryAssets, isDramaLibraryAsset } from '../../lib/dramaLibraryAssets'
 import { DRAMA_VOICE_BINDING_ENABLED } from '../../lib/dramaVoiceBinding'
+import { enqueueProjectAssetImages } from '../../lib/dramaBatchAssetImages'
 import { pageCountOf } from '../../lib/pagination'
 import RequireAuth from './RequireAuth'
 import './drama.css'
@@ -109,6 +110,7 @@ function AssetLibraryInner() {
   const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
+  const [batchBusy, setBatchBusy] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
@@ -191,6 +193,29 @@ function AssetLibraryInner() {
   }, [tab, query, projectId, pageSize])
 
   // 卡片缩略图上试听 / 暂停音色
+  async function handleGenerateAllAssets() {
+    const pid = Number(projectId)
+    if (!Number.isFinite(pid) || pid <= 0 || batchBusy) return
+    setBatchBusy(true)
+    setError('')
+    try {
+      await enqueueProjectAssetImages({
+        projectId: pid,
+        title: '一键生成全部资产',
+        confirmVerb: '开始生成',
+        onAssetUpdate: (next) => {
+          setAssets((prev) => prev.map((a) => (a.id === next.id ? next : a)))
+        },
+      })
+      const rows = await dramaApi.listAssets(pid, { libraryOnly: true })
+      setAssets(filterDramaLibraryAssets(rows))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '一键生成全部资产失败')
+    } finally {
+      setBatchBusy(false)
+    }
+  }
+
   function toggleVoice(asset: DramaAsset) {
     const src = resolveDramaMediaUrl(voicePreviewUrl(asset))
     if (!src) {
@@ -221,6 +246,16 @@ function AssetLibraryInner() {
               </p>
             </div>
             <div className="pf-drama-list-actions">
+              {projectId ? (
+                <Button
+                  variant="lime"
+                  size="sm"
+                  disabled={batchBusy || loading}
+                  onClick={() => void handleGenerateAllAssets()}
+                >
+                  {batchBusy ? '入队中…' : '一键生成全部资产'}
+                </Button>
+              ) : null}
               <Button to="/drama" variant="ghost" size="sm">
                 漫剧项目
               </Button>

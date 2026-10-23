@@ -1,21 +1,13 @@
 # PRINTFILM
 
-[![GitHub stars](https://img.shields.io/github/stars/hanchenxing1/printfilm?style=social)](https://github.com/hanchenxing1/printfilm)
+[![GitHub stars](https://img.shields.io/github/stars/yi1108/printfilm?style=social)](https://github.com/yi1108/printfilm)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 > **把故事做成能播的片子** — AI 漫剧与 AI 短视频，从文案到成片。
 
-模板驱动的创作平台：主题 / 剧本 → 分镜 → 生图 → 生视频 → 成片。
+模板驱动的创作平台：主题 / 剧本 → 分镜 → 生图 → 生视频 → 成片。口播由 Seedance 出片时生成，无需单独配音。
 
-**源码**：[github.com/hanchenxing1/printfilm](https://github.com/hanchenxing1/printfilm) · **版本** 0.2.0
-
-## 下载
-
-| 平台 | 安装包 | 说明 |
-|------|--------|------|
-| Windows 桌面版 | [PRINTFILM Setup 1.1.2.exe](https://aidj.aiwyq.bond/apps/printfilm-desktop-1.1.2-setup.exe) | Electron 安装包（约 83 MB），内置在线自动更新 |
-| Windows 便携版 | [PRINTFILM 1.1.2 portable.zip](https://aidj.aiwyq.bond/apps/printfilm-1.1.2-portable.zip) | 免安装，解压即用（约 116 MB） |
-| Android | [printfilm-mobile-1.1.apk](https://aidj.aiwyq.bond/apps/printfilm-mobile-1.1-release.apk) | 移动端 APK（release 签名版） |
+**源码**：[github.com/yi1108/printfilm](https://github.com/yi1108/printfilm) · **版本** 0.2.0
 
 ## 界面预览
 
@@ -73,7 +65,7 @@
 输入主题或剧本
     → 分镜
     → 生图
-    → 生视频
+    → 生视频（Seedance 自带口播）
     → FFmpeg 合成成片
 ```
 
@@ -83,7 +75,7 @@
 
 - **两条产品线共用一套生成能力** — 漫剧与短视频走同一上游
 - **进程内任务平台** — scheduler / executor / poller，无需单独 Celery Worker
-- **Agnes 官方 API 全链路** — 文字 / 图 / 视频统一走 Agnes，用户自带 Key 即可出片
+- **模型可换** — 管理后台配置 Agnes Key 与模型，不必改代码
 - **Docker 一键启动** — 公开镜像，拉取无需登录
 - **可选计费** — 默认关闭；开启后按用量结算，见 [docs/BILLING.md](docs/BILLING.md)
 
@@ -93,51 +85,8 @@
 |----|------|
 | 后端 | Python 3.12 · FastAPI · SQLAlchemy · PostgreSQL · Redis |
 | 前端 | React 19 · TypeScript · Vite 8（管理端 Tailwind + shadcn） |
-| AI | Agnes 官方 API（文字 / 图 / 视频：`https://apihub.agnes-ai.com/v1`） |
+| AI | Agnes 官方 API · New API 网关 `https://new.aiwyq.bond/v1`（文字 / 图 / 视频统一） |
 | 部署 | Docker 全栈镜像，或本机三进程 + 中间件容器 |
-
-## 单机最简（Windows 双击 start_local.bat，推荐本地体验）
-
-三条能力（**文本 / 图片 / 视频**）全部走 **Agnes 官方 API**（`https://apihub.agnes-ai.com/v1`），模型名已写死在代码里：
-
-| 能力 | 模型 ID |
-|------|---------|
-| 文本 | `agnes-3.0-flash` |
-| 图片 | `agnes-image-2.5-flash` |
-| 视频 | `agnes-video-2.5-flash` |
-
-**你只需在个人中心填一把 Agnes Key，即可三项全通。**
-
-### 前置安装（只需一次）
-
-- Docker Desktop：<https://www.docker.com/products/docker-desktop/>
-- Python 3.12+：<https://www.python.org/downloads/>
-- Node.js 18+：<https://nodejs.org/>
-- FFmpeg（加入 PATH）：<https://ffmpeg.org/download.html>
-
-### 启动
-
-```bat
-:: 克隆仓库后，进入根目录，双击：
-start_local.bat
-```
-
-脚本自动完成：
-
-1. 检测依赖
-2. 起 Postgres（:15432）+ Redis（:16379）Docker 容器
-3. 初始化 backend venv（首次约 2-5 分钟）+ frontend / admin 依赖
-4. 启动 API（:8000）+ 用户端（:5173）+ 管理端（:5174）
-5. 自动打开浏览器 http://localhost:5173
-
-### 填 Key 出片
-
-1. 在 http://localhost:5173 注册账号并登录
-2. 进入 **个人中心 → API**
-3. 在「Agnes 视频 Key」区粘贴你的 Agnes API Key（`sk-...`），点击添加
-4. 在工具中心发一条视频生成任务，验证出片
-
-> 日志目录：`<仓库>/.local-run/`（`api.err.log`、`fe.out.log`、`admin.out.log`）
 
 ## 快速开始（Docker 一键启动）
 
@@ -146,19 +95,19 @@ start_local.bat
 ### 1. 克隆并准备环境变量
 
 ```bash
-git clone https://github.com/hanchenxing1/printfilm.git
+git clone https://github.com/yi1108/printfilm.git
 cd printfilm
 
 cp deploy/.env.docker.example deploy/.env.docker
 ```
 
-编辑 `deploy/.env.docker`，至少改这几项：
+编辑 `deploy/.env.docker`，至少改这三项：
 
 | 变量 | 说明 |
 |------|------|
 | `POSTGRES_PASSWORD` | 数据库密码（勿用示例默认值） |
 | `SECRET_KEY` | 任意长随机串（会话 / 密钥加密） |
-| `AGNES_API_KEY` / `ARK_API_KEY` | Agnes API Key（同一把填两处即可） |
+| `OPENAI_API_KEY` / `ARK_API_KEY` | Agnes 官方 API Key（同一把填两处即可） |
 
 无 Key 想先看界面：把 `ARK_MOCK=true`。
 
@@ -209,43 +158,35 @@ docker compose --env-file deploy/.env.docker up -d
 docker compose --env-file deploy/.env.docker -f docker-compose.full.yml up -d --build
 ```
 
-## 配置 Agnes API Key
+## 配置 Agnes 官方 API Key
 
-开源版文字 / 图 / 视频统一走 **Agnes 官方 API**（`https://apihub.agnes-ai.com/v1`）。没有 Key 时只能 `ARK_MOCK=true` 看界面，不能真实生图 / 生视频。
+开源版文字 / 图 / 视频统一走 **Agnes 官方 API**（New API 网关 OpenAI 兼容：`https://new.aiwyq.bond/v1`）。没有 Key 时只能 `ARK_MOCK=true` 看界面，不能真实生图 / 生视频。
 
-模型名全局统一为 agnes 系列（已写死在代码，无需改动）：
+### A. 在 Agnes 官方申请 Key
 
-| 能力 | 模型 ID |
-|------|---------|
-| 文字 | `agnes-3.0-flash` |
-| 图片 | `agnes-image-2.5-flash` |
-| 视频 | `agnes-video-2.5-flash` |
-
-### A. 在 Agnes 拿到 Key
-
-1. 打开 Agnes 控制台注册并登录。
-2. 进入控制台的 **API 密钥 / Tokens**。
+1. 打开 [https://new.aiwyq.bond](https://new.aiwyq.bond) 注册并登录（新用户注册送 **10 元免费额度**）。
+2. 进入控制台的 **API 密钥 / Tokens**（部分部署路径为 `/token` 或 `/keys`）。
 3. 点击 **创建**，填名称（如 `printfilm`），按需设额度 / 过期时间。
 4. **立刻复制完整 Key**（形如 `sk-…`，只显示一次）。
-5. 确认账户有余额或可用额度。
+5. 确认账户有余额或可用额度；模型列表里能看到你要用的对话 / 生图 / 视频模型。
 
-> Key 等同密码，不要提交到 Git、不要发到群聊。泄露后在 Agnes 控制台作废并重建。
+> Key 等同密码，不要提交到 Git、不要发到群聊。泄露后在 TokenFree 控制台作废并重建。
 
 ### B. 写入 Docker 环境（推荐自托管首次启动）
 
 编辑 `deploy/.env.docker`：
 
 ```env
-ARK_API_KEY=sk-你的Agnes密钥
+OPENAI_API_KEY=sk-你的密钥
+OPENAI_BASE_URL=https://new.aiwyq.bond/v1
+ARK_API_KEY=sk-你的密钥
 ARK_MOCK=false
-AGNES_API_KEY=sk-你的Agnes密钥
-AGNES_BASE_URL=https://apihub.agnes-ai.com/v1
-MODEL_LLM=agnes-3.0-flash
-MODEL_IMAGE=agnes-image-2.5-flash
-MODEL_VIDEO=agnes-video-2.5-flash
+MODEL_LLM=kimi-k2.6
+MODEL_IMAGE=seedream-5-0-pro
+MODEL_VIDEO=seedance-2-5
 ```
 
-`ARK_API_KEY` 与 `AGNES_API_KEY` 填**同一把** Agnes Key 即可。然后重建 API 容器使环境生效：
+`OPENAI_API_KEY` 与 `ARK_API_KEY` 填**同一把**即可。然后重建 API 容器使环境生效：
 
 ```bash
 docker compose --env-file deploy/.env.docker up -d --force-recreate api
@@ -253,23 +194,23 @@ docker compose --env-file deploy/.env.docker up -d --force-recreate api
 
 打开 http://localhost:8000/api/health ，`ark_mock` 应为 `false`。
 
-### C. 在个人中心填写（推荐日常改 Key）
+### C. 在管理后台填写（推荐日常改 Key）
 
-1. 登录后打开 **个人中心 → API**。
-2. 在「Agnes 视频 Key」区粘贴你的 Agnes API Key，点击添加。
-3. 保存后该账号的文字 / 图 / 视频生成全部走 `https://apihub.agnes-ai.com/v1`，使用你添加的 Key。
+1. 用管理员登录 http://localhost:8081 。
+2. 打开 **系统设置 → 模型**（路由 / Agnes 渠道）。
+3. 在 Agnes 渠道填入 API Key 并保存。
+4. 按需调整默认文字 / 图 / 视频模型；保存后即时生效，一般不必改 `.env`。
 
-Key 加密入库，列表只显示前缀。未填写时回退环境变量 `AGNES_API_KEYS`（多账号逗号分隔，429 自动轮换）。
+后台保存的 Key 会加密进数据库；换机器迁移时记得一并备份库，或重新在后台填写。
 
 ### D. 联调排查
 
 | 现象 | 处理 |
 |------|------|
-| 生图 / 生视频报未配置 Key | 检查 `.env.docker` 是否仍为 `replace-me`，或个人中心是否已填 Key |
+| 生图 / 生视频报未配置 Key | 检查 `.env.docker` 是否仍为 `replace-me`，或后台渠道是否已填 Key |
 | `ark_mock: true` | 关掉 `ARK_MOCK`，并确认 Key 非空后 `--force-recreate api` |
-| 401 / 额度不足 | 到 Agnes 控制台看 Key 是否启用、余额是否够 |
-| 429 限流 | Agnes 免费档 RPM 较低，多任务会串行退避；可配 `AGNES_API_KEYS` 多账号池提升吞吐 |
-
+| 401 / 额度不足 | 到 new.aiwyq.bond 控制台看 Key 是否启用、余额是否够 |
+| 模型名 404 | 在后台模型列表里选 Agnes 网关实际提供的模型 id |
 ## 适用场景
 
 - 短视频 / 获客片：把卖点做成可投放的短片
@@ -291,12 +232,12 @@ docker-compose.full.yml   从源码构建
 
 ## 社区
 
-- GitHub：https://github.com/hanchenxing1/printfilm
+- GitHub：https://github.com/yi1108/printfilm
 - 微信加 **`gitpp88`**（备注「入群」）：部署答疑 / 短剧交流 / 模板分享
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/chart?repos=hanchenxing1/printfilm&type=date&legend=top-left)](https://www.star-history.com/#hanchenxing1/printfilm&Date)
+[![Star History Chart](https://api.star-history.com/chart?repos=yi1108/printfilm&type=date&legend=top-left)](https://www.star-history.com/#yi1108/printfilm&Date)
 
 ## 更多文档
 
@@ -305,6 +246,7 @@ docker-compose.full.yml   从源码构建
 | [docs/STANDARDS.md](docs/STANDARDS.md) | 工程规范 |
 | [docs/BILLING.md](docs/BILLING.md) | 计费与易支付 |
 | [docs/EPISODE_RULES.md](docs/EPISODE_RULES.md) | 漫剧分集 |
+| [docs/SEEDANCE_2_5.md](docs/SEEDANCE_2_5.md) | Seedance 参数 |
 | [deploy/README.md](deploy/README.md) | 本机中间件与运维 |
 
 ## 贡献

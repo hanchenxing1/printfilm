@@ -73,7 +73,7 @@ function EpisodeFragmentNodeComponent({
             className="ep-frag-prompt-input nodrag nowheel"
             value={data.content}
             onChange={handlePromptChange}
-            placeholder="分镜脚本 / Seedance 提示词…"
+            placeholder="分镜脚本 / Agnes 提示词…"
             rows={5}
           />
         ) : (

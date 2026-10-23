@@ -191,14 +191,7 @@ async def _poll_one_task(task_id: int) -> None:
             return
 
     try:
-        from app.models import User
-        from app.services.agnes_keys import user_agnes_scope
-
-        async with AsyncSessionLocal() as db:
-            row = await db.get(TaskRun, task_id)
-            user = await db.get(User, row.requested_by) if row and row.requested_by else None
-            async with user_agnes_scope(db, user):
-                await poll_fragment_video_task(task_id)
+        await poll_fragment_video_task(task_id)
     except Exception:  # noqa: BLE001
         logger.exception("selector poll failed task_id=%s", task_id)
         async with AsyncSessionLocal() as db:
@@ -288,10 +281,7 @@ async def _poll_one_ephemeral_task(task_id: int, *, now, timeout_sec: float) -> 
         if not user or not provider_id:
             return
 
-        from app.services.agnes_keys import user_agnes_scope
-
-        async with user_agnes_scope(db, user):
-            data = await poll_video_task(user, provider_id)
+        data = await poll_video_task(user, provider_id)
         status = str(data.get("status") or "").strip().lower()
         if status in {"", "running", "queued"}:
             task.next_action_at = now + timedelta(

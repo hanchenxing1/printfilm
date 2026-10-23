@@ -19,6 +19,64 @@ ORDER_EXPIRE_SECONDS = 300
 # Kie 1 credit ≈ $0.005；按约 7 CNY/USD 折合 ¥0.035 ≈ 3.5 分（可配置）
 DEFAULT_KIE_FEN_PER_CREDIT = 3.5
 
+def platform_pricing_active(settings: Settings | None = None) -> bool:
+    """是否启用平台固定价目（估算/实扣同口径，忽略上游成本）。"""
+    s = settings or get_settings()
+    return bool(getattr(s, "billing_use_platform_pricing", False))
+
+
+def _duration_sec_from_raw(raw_usage: dict[str, Any] | None) -> float:
+    """从 usage raw 解析视频时长（秒）。record_seedance_video_usage 写入 duration_sec。"""
+    if not isinstance(raw_usage, dict):
+        return 0.0
+    usage = raw_usage.get("usage") if isinstance(raw_usage.get("usage"), dict) else raw_usage
+    for key in ("duration_sec", "seconds", "duration"):
+        try:
+            v = float(usage.get(key) or 0)
+        except (TypeError, ValueError):
+            continue
+        if v > 0:
+            return v
+    return 0.0
+
+
+def charge_fen_platform(
+    billing_key: str,
+    *,
+    tokens: int = 0,
+    model: str = "",
+    size: str = "",
+    duration_sec: float = 0.0,
+    settings: Settings | None = None,
+) -> int:
+    """平台固定价目下的用户扣费（分）。估算/实扣共用同一公式。
+
+    - LLM：ceil(tokens/500) × billing_llm_fen_per_500；tokens<=0 时为 0
+    - 图片：每张 billing_image_fen_per_image
+    - 视频：ceil(时长) × billing_video_fen_per_sec，时长按秒下限 2s
+    - TTS：billing_tts_free 时 0，否则回落旧价目
+    """
+    s = settings or get_settings()
+    cap = billing_key_to_capability(billing_key)
+    if cap == "llm":
+        t = max(0, int(tokens))
+        if t <= 0:
+            return 0
+        unit = max(0, int(getattr(s, "billing_llm_fen_per_500", 1)))
+        return max(1, math.ceil(t / 500.0) * unit) if unit > 0 else 0
+    if cap == "image":
+        return max(0, int(getattr(s, "billing_image_fen_per_image", 3)))
+    if cap == "video":
+        d = max(float(duration_sec or 0), 2.0)
+        unit = max(0, int(getattr(s, "billing_video_fen_per_sec", 1)))
+        return max(1, math.ceil(d) * unit) if unit > 0 else 0
+    if cap == "tts":
+        if getattr(s, "billing_tts_free", True):
+            return 0
+    # 其他 / TTS 收费：回落旧价目 token 公式
+    cost, charge = charge_fen_for_tokens(max(0, int(tokens)), billing_key, settings=s)
+    return charge
+
 
 def provider_yuan_per_m(billing_key: str, settings: Settings | None = None) -> float:
     s = settings or get_settings()
@@ -183,6 +241,17 @@ def charge_fen_for_usage(
     生图无 quota 时：按张官方价，避免 8 元/百万 token 低估约十倍。
     """
     s = settings or get_settings()
+    if platform_pricing_active(s):
+        duration = _duration_sec_from_raw(raw_usage)
+        charge = charge_fen_platform(
+            billing_key,
+            tokens=int(tokens),
+            model=model,
+            size=size or _image_size_from_raw(raw_usage),
+            duration_sec=duration,
+            settings=s,
+        )
+        return charge, charge, False
     upstream_cost = parse_upstream_cost_fen(raw_usage, settings=s)
     if upstream_cost is not None and upstream_cost > 0:
         cost = upstream_cost

@@ -11,7 +11,7 @@ from sqlalchemy.orm import selectinload
 from app.config import Settings, get_settings
 from app.models import Project
 from app.models_tasks import TaskRun
-from app.services.billing.pricing import charge_fen_for_tokens
+from app.services.billing.pricing import charge_fen_for_tokens, charge_fen_platform, platform_pricing_active
 from app.services.tokenfree_pricing import (
     charge_fen_official_image,
     charge_fen_official_llm,
@@ -32,17 +32,6 @@ __all__ = [
     "estimate_task_fen",
     "resolve_kepu_billing_phase",
 ]
-
-
-def _safe_float_duration(val: object, default: float = 5.0) -> float:
-    """容错解析时长：'5s' / '5' / 10 / None → float；无法解析时回退默认值。"""
-    if val is None:
-        return default
-    try:
-        n = float(str(val).strip().lower().replace("s", ""))
-    except (TypeError, ValueError):
-        n = default
-    return max(2.0, n)
 
 
 def _kepu_video_resolution(project: Project | None, settings: Settings) -> str:
@@ -165,9 +154,131 @@ def estimate_phase_fen(project: Project, phase: str, settings: Settings | None =
     return _estimate_assets_fen(project, s)
 
 
+async def _resolve_drama_video_duration(db: AsyncSession, task: TaskRun, payload: dict) -> float:
+    """漫剧视频时长解析（秒）：payload → prepared → 分镜内容，缺省 8s，下限 2s。"""
+    dur = float(payload.get("duration_sec") or payload.get("duration") or 0)
+    if dur <= 0 and isinstance(payload.get("prepared"), dict):
+        dur = float(payload["prepared"].get("duration") or 0)
+    if dur <= 0:
+        frag_id = task.fragment_id or (
+            (payload.get("fragment_ids") or [None])[0]
+            if isinstance(payload.get("fragment_ids"), list)
+            else None
+        )
+        if frag_id:
+            from app.models_drama import DramaEpisodeFragment
+            from app.services.drama.fragment_content_duration import (
+                resolve_seedance_duration_from_content,
+            )
+            frag = await db.get(DramaEpisodeFragment, int(frag_id))
+            if frag is not None:
+                dur = float(
+                    resolve_seedance_duration_from_content(
+                        frag.content or "",
+                        fallback=int(frag.duration_sec or 8),
+                    )
+                )
+    if dur <= 0:
+        dur = 8.0
+    return max(dur, 2.0)
+
+
+async def _estimate_task_fen_platform(db: AsyncSession, task: TaskRun, settings: Settings) -> int:
+    """平台固定价目估算：与实扣同一公式、无缓冲，估算=实扣同口径。"""
+    s = settings
+    est_tokens = int(s.billing_est_llm_tokens)
+
+    def llm(mult: int = 1) -> int:
+        return charge_fen_platform("llm_chat", tokens=est_tokens * max(1, int(mult)), settings=s)
+
+    def images(count: int = 1) -> int:
+        return charge_fen_platform("seedream", settings=s) * max(1, int(count))
+
+    def video(sec: float) -> int:
+        return charge_fen_platform("seedance2:video0", duration_sec=max(float(sec or 0), 2.0), settings=s)
+
+    def tts() -> int:
+        return charge_fen_platform("tts", settings=s)
+
+    domain = (task.domain or "").strip()
+    task_type = (task.task_type or "").strip()
+    payload = task.payload if isinstance(task.payload, dict) else {}
+
+    if domain == "kepu" and task_type == "project_pipeline":
+        project_id = task.project_id or payload.get("project_id")
+        if not project_id:
+            return llm(1)
+        result = await db.execute(
+            select(Project).where(Project.id == int(project_id)).options(selectinload(Project.shots))
+        )
+        project = result.scalar_one_or_none()
+        if not project:
+            return llm(1)
+        phase = str(payload.get("phase") or "script")
+        raw = normalize_kepu_pipeline_phase(phase, project)
+        if raw == "script":
+            return llm(1)
+        if raw == "assets":
+            shots = list(project.shots or [])
+            need_img = sum(1 for sh in shots if not shot_image_ready(sh))
+            need_tts = 0 if project_audio_ready(project) else 1
+            return max(need_img * images(1) + need_tts * tts(), 1)
+        if raw == "videos":
+            shots = [sh for sh in list(project.shots or []) if not shot_video_ready(sh)]
+            return max(sum(video(max(float(sh.duration or 4), 2.0)) for sh in shots), 1)
+        if raw == "compose":
+            return 1
+        shots = list(project.shots or [])
+        return max(sum(1 for sh in shots if not shot_image_ready(sh)) * images(1), 1)
+
+    if domain == "kepu":
+        if task_type in {"shot_regen_image"}:
+            return images(1)
+        if task_type in {"shot_regen_video"}:
+            return video(float(payload.get("duration") or 5))
+        if task_type in {"shot_regen_audio", "project_regen_audio"}:
+            return max(tts(), 1)
+        if task_type == "project_compose_only":
+            return 1
+
+    if domain == "drama":
+        if task_type in {"script_summary", "fragment_plan", "agent_chat"}:
+            return llm(1)
+        if task_type == "episode_script":
+            total_eps = int(payload.get("total") or payload.get("episode_count") or 1)
+            return llm(max(total_eps, 1))
+        if task_type in {"asset_image", "seed_assets"}:
+            if task_type == "seed_assets":
+                return llm(3)
+            return images(1)
+        if task_type in {"asset_video", "fragment_video"}:
+            dur = await _resolve_drama_video_duration(db, task, payload)
+            total = video(dur)
+            if task_type == "fragment_video":
+                total += images(1) // 2
+            return max(total, 1)
+        if task_type == "voice_synthesis":
+            return max(tts(), 1)
+        if task_type in {"skill_optimize", "voice_prompt"}:
+            return llm(1)
+
+    if domain == "kepu" and task_type == "content_expand":
+        return llm(1)
+
+    if domain in {"api", "studio"}:
+        if task_type in {"v1_image", "tool_image"}:
+            return images(1)
+        if task_type in {"v1_video", "v1_seedance", "tool_video"}:
+            return video(float(payload.get("duration") or 5))
+
+    return llm(1)
+
+
 async def estimate_task_fen(db: AsyncSession, task: TaskRun, settings: Settings | None = None) -> int:
     """按 domain + task_type 估算单任务预扣（分）。"""
     s = settings or get_settings()
+    if platform_pricing_active(s):
+        return await _estimate_task_fen_platform(db, task, s)
     await ensure_official_rates(s)
     domain = (task.domain or "").strip()
     task_type = (task.task_type or "").strip()
@@ -192,7 +303,7 @@ async def estimate_task_fen(db: AsyncSession, task: TaskRun, settings: Settings 
         if task_type in {"shot_regen_image"}:
             return _catalog_image_fen(s, payload=payload)
         if task_type in {"shot_regen_video"}:
-            dur = _safe_float_duration(payload.get("duration"), default=5.0)
+            dur = float(payload.get("duration") or 5)
             project_id = task.project_id or payload.get("project_id")
             project = await db.get(Project, int(project_id)) if project_id else None
             c = charge_fen_official_video(
@@ -219,8 +330,7 @@ async def estimate_task_fen(db: AsyncSession, task: TaskRun, settings: Settings 
                 return _buffered_fen(c, s)
             return _catalog_image_fen(s, payload=payload)
         if task_type in {"asset_video", "fragment_video"}:
-            _dur_raw = payload.get("duration_sec") or payload.get("duration") or 0
-            dur = _safe_float_duration(_dur_raw, default=0.0)
+            dur = float(payload.get("duration_sec") or payload.get("duration") or 0)
             if dur <= 0 and isinstance(payload.get("prepared"), dict):
                 dur = float(payload["prepared"].get("duration") or 0)
             if dur <= 0:
@@ -267,7 +377,7 @@ async def estimate_task_fen(db: AsyncSession, task: TaskRun, settings: Settings 
         if task_type in {"v1_image", "tool_image"}:
             return _catalog_image_fen(s, payload=payload)
         if task_type in {"v1_video", "v1_seedance", "tool_video"}:
-            dur = _safe_float_duration(payload.get("duration"), default=5.0)
+            dur = float(payload.get("duration") or 5)
             c = charge_fen_official_video(
                 max(dur, 2.0),
                 s,

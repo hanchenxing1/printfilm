@@ -224,6 +224,11 @@ export function AssetsStep({ projectId, onError }: AssetsStepProps) {
   )
   // 未出图：无有效 cover/url，且当前未在队列中
   const pending = filtered.filter((a) => needsImageGeneration(a) && !busyAssetIds.has(a.id))
+  // 全项目未出图的图片资产（角色/场景/道具；不含音色/视频/音频/文本），供一键全量生成
+  const pendingAll = assetList.filter((a) => {
+    const t = (a.type || '').toLowerCase()
+    return !['voice', 'video', 'audio', 'text'].includes(t) && needsImageGeneration(a) && !busyAssetIds.has(a.id)
+  })
   const queueBusy = busyAssetIds.size > 0
   const pageCount = pageCountOf(filtered.length, pageSize)
   const safePage = Math.min(page, pageCount)
@@ -298,13 +303,11 @@ export function AssetsStep({ projectId, onError }: AssetsStepProps) {
     })()
   }
 
-  // 一键只入队「当前分类下尚未出图」的资产（已有图 / 排队中跳过）
+  // 一键全量：入队整个项目下尚未出图的图片资产（跨角色/场景/道具；已有图 / 排队中跳过）
   async function batchGenerate() {
-    const targets = filtered.filter(
-      (a) => needsImageGeneration(a) && !busyAssetIds.has(a.id),
-    )
+    const targets = pendingAll
     if (targets.length === 0) {
-      onError('当前分类没有未生成的资产')
+      onError('没有未出图的图片资产')
       return
     }
     const pre = await ensureImageGenBalance(targets.length)
@@ -313,9 +316,9 @@ export function AssetsStep({ projectId, onError }: AssetsStepProps) {
     const totalYuan = pre.requested_total_yuan ?? pre.requested_total_fen / 100
     const balanceYuan = pre.balance_yuan ?? pre.balance_fen / 100
     const ok = await dialog.confirm({
-      title: '批量生成形象',
+      title: '一键生成所有图片资产',
       message:
-        `将为当前「${ASSET_TABS.find((t) => t.key === tab)?.label || '分类'}」下 ${targets.length} 个未出图资产开始生图（并行提交，不排队）。\n\n` +
+        `将为当前项目全部 ${targets.length} 个未出图图片资产（角色/场景/道具）开始生图（并行提交，不排队）。\n\n` +
         `每张预扣约 ¥${unitYuan.toFixed(2)}，本次合计约 ¥${totalYuan.toFixed(2)}（当前余额 ¥${balanceYuan.toFixed(2)}；结束后按实际上游用量多退少补）。\n\n是否继续？`,
       confirmText: '开始生成',
     })
@@ -739,24 +742,23 @@ export function AssetsStep({ projectId, onError }: AssetsStepProps) {
               ? `AI 抽取中…（约 ${Math.max(imageAssetCount, 1)} 项，需 1–3 分钟）`
               : '重新抽取资产'}
           </button>
-          {/* 一键生成未出图：暂时隐藏，恢复时去掉 && false */}
-          {tab !== 'voice' && false ? (
+          {tab !== 'voice' ? (
             <button
               type="button"
               className="drama-btn-primary"
-              disabled={batchBusy || pending.length === 0}
+              disabled={batchBusy || pendingAll.length === 0}
               onClick={() => void batchGenerate()}
               title={
-                pending.length > 0
-                  ? `仅生成当前分类下尚未出图的 ${pending.length} 项（最多同时 3 路）`
-                  : '当前分类没有未出图资产'
+                pendingAll.length > 0
+                  ? `生成整个项目下尚未出图的 ${pendingAll.length} 张图片资产（角色/场景/道具，并行提交）`
+                  : '没有未出图的图片资产'
               }
             >
               {batchBusy || queueBusy
                 ? `生成中 ${busyAssetIds.size}`
-                : pending.length > 0
-                  ? `一键生成未出图 (${pending.length})`
-                  : '一键生成未出图'}
+                : pendingAll.length > 0
+                  ? `一键生成所有图片 (${pendingAll.length})`
+                  : '一键生成所有图片'}
             </button>
           ) : null}
 

@@ -2,10 +2,9 @@
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import AppShell from '../components/layout/AppShell'
 import UserAvatar from '../components/UserAvatar'
-import { api, type User, type Wallet } from '../api'
+import { api, type User } from '../api'
 import { dramaApi, type DramaProjectListItem } from '../api/drama'
-import MonthlyUsageCard from '../components/billing/MonthlyUsageCard'
-import UsageChargeRecords from '../components/billing/UsageChargeRecords'
+import SubscriptionPanel from '../components/billing/SubscriptionPanel'
 import ApiKeysPanel from './settings/ApiKeysPanel'
 import AccountProfileCard from './settings/AccountProfileCard'
 import ChangePasswordCard from './settings/ChangePasswordCard'
@@ -72,7 +71,6 @@ export default function SettingsPage() {
   /*
    * tab 当前侧栏分区
    * user 当前登录用户
-   * wallet 钱包余额
    * dramaItems 最近漫剧项目
    * kepuItems 最近科普项目
    * listError 列表加载错误
@@ -80,7 +78,6 @@ export default function SettingsPage() {
    */
   const [tab, setTab] = useState<SettingsTab>(() => parseTab(params.get('tab')))
   const [user, setUser] = useState<User | null>(null)
-  const [wallet, setWallet] = useState<Wallet | null>(null)
   const [dramaItems, setDramaItems] = useState<DramaProjectListItem[]>([])
   const [kepuItems, setKepuItems] = useState<KepuItem[]>([])
   const [listError, setListError] = useState('')
@@ -98,7 +95,6 @@ export default function SettingsPage() {
         localStorage.removeItem('token')
         nav('/auth')
       })
-    api.wallet().then(setWallet).catch(() => undefined)
   }, [nav])
 
   useEffect(() => {
@@ -292,25 +288,18 @@ export default function SettingsPage() {
 
           {tab === 'subscription' ? (
             <section className="pf-settings-card">
-              <h1>{t('settings.tabs.subscription')}</h1>
-              <p className="pf-muted">{t('settings.subLead')}</p>
-              <div className="pf-settings-balance">
+              <div className="pf-settings-card-head">
                 <div>
-                  <span className="pf-muted">{t('settings.balance')}</span>
-                  <strong>¥{(wallet?.balance_yuan ?? 0).toFixed(2)}</strong>
+                  <h1>{t('settings.tabs.subscription')}</h1>
+                  <p className="pf-muted">{t('settings.subLead')}</p>
                 </div>
-                <div>
-                  <span className="pf-muted">{t('settings.frozen')}</span>
-                  <em>¥{(wallet?.frozen_yuan ?? 0).toFixed(2)}</em>
+                <div className="pf-settings-actions">
+                  <Link className="pf-btn pf-btn-ghost pf-btn-sm" to="/pricing">
+                    {t('settings.goTopup')}
+                  </Link>
                 </div>
               </div>
-              <MonthlyUsageCard variant="compact" showTopup={false} />
-              <UsageChargeRecords variant="compact" />
-              <div className="pf-settings-actions">
-                <Link className="pf-btn pf-btn-lime pf-btn-sm" to="/pricing">
-                  {t('settings.goTopup')}
-                </Link>
-              </div>
+              <SubscriptionPanel variant="compact" />
             </section>
           ) : null}
 

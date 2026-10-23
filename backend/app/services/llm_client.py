@@ -75,33 +75,13 @@ async def chat_completions(
     settings = get_settings()
     logical_id = resolve_logical_model_id("text", None)
     route = resolve_logical_model("text", logical_id)
-    model = (route.upstream_model or "").strip() if route else (settings.model_llm or "").strip()
-
-    # Agnes 文本短路：模型为 agnes-* 且已配置 Agnes Key 时，直接走 Agnes 官方通道（无需 TokenFree key）
-    from app.services import agnes_client as _agnes
-    if _agnes.is_agnes_model(model):
-        client = _agnes.get_agnes_client()
-        if client is not None:
-            logger.info("文字 LLM 走 Agnes model=%s user_len=%s", model, len(user or ""))
-            return await client.chat(
-                user,
-                system=system,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                model=model,
-                response_format=response_format,
-            )
-        raise LlmUnavailableError(
-            "文字模型为 Agnes，但未配置 Agnes API Key。"
-            "请在个人中心 → API 添加你的 Agnes Key，或设置环境变量 AGNES_API_KEYS。"
-        )
-
-    # 非 Agnes 通道（TokenFree / OpenAI 兼容）
     if route:
         api_key = route.api_key
+        model = (route.upstream_model or "").strip()
         base = route.base_url.rstrip("/") or resolve_llm_base_url()
     else:
         api_key = resolve_llm_api_key()
+        model = (settings.model_llm or "").strip()
         base = resolve_llm_base_url()
     if not model:
         raise LlmUnavailableError(

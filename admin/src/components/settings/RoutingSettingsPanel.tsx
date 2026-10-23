@@ -21,8 +21,8 @@ import {
 import { cn } from "@/lib/utils";
 
 const TOKENFREE_CHANNEL_ID = "tokenfree";
-const TOKENFREE_BASE_URL = "https://www.tokenfree.com/v1";
-const TOKENFREE_CONSOLE_URL = "https://www.tokenfree.com/channels";
+const TOKENFREE_BASE_URL = "https://new.aiwyq.bond/v1";
+const TOKENFREE_CONSOLE_URL = "https://new.aiwyq.bond/user";
 
 const DEFAULT_KEYS = ["text_model", "image_model", "video_model", "audio_model"] as const;
 

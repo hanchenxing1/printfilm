@@ -13,6 +13,12 @@ from app.config import Settings, get_settings
 from app.models import UsageEvent, User, WalletLedger
 from app.models_tasks import TaskRun
 from app.services.billing.estimates import estimate_task_fen
+from app.services.billing.grant_pool import (
+    active_grant_fen,
+    expire_user_grant,
+    grant_expired,
+    grant_take,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -120,15 +126,19 @@ async def ensure_balance_for_task(db: AsyncSession, user: User, task: TaskRun) -
     user.frozen_fen = int(locked.frozen_fen or 0)
     need = await estimate_task_fen(db, task)
     pending = await pending_task_commitment_fen(db, int(user.id))
-    available = int(locked.balance_fen or 0)
+    user.grant_fen = int(locked.grant_fen or 0)
+    user.frozen_grant_fen = int(locked.frozen_grant_fen or 0)
+    user.grant_expire_at = locked.grant_expire_at
+    expire_user_grant(db, user)
+    available = int(locked.balance_fen or 0) + active_grant_fen(user)
     required = pending + need
     if available < required:
         if pending > 0:
             raise ValueError(
-                f"余额不足：本次需要 ¥{need/100:.2f}（含排队中 ¥{pending/100:.2f}），"
+                f"额度不足：本次需要 ¥{need/100:.2f}（含排队中 ¥{pending/100:.2f}），"
                 f"当前 ¥{available/100:.2f}，请先充值"
             )
-        raise ValueError(f"余额不足：需要 ¥{need/100:.2f}，当前 ¥{available/100:.2f}，请先充值")
+        raise ValueError(f"额度不足：需要 ¥{need/100:.2f}，当前 ¥{available/100:.2f}，请先充值")
     return need
 
 
@@ -151,10 +161,14 @@ async def ensure_balance_for_task_batch(
     pending = await pending_task_commitment_fen(db, int(user.id))
     additional = unit * qty
     required = pending + additional
-    available = int(locked.balance_fen or 0)
+    user.grant_fen = int(locked.grant_fen or 0)
+    user.frozen_grant_fen = int(locked.frozen_grant_fen or 0)
+    user.grant_expire_at = locked.grant_expire_at
+    expire_user_grant(db, user)
+    available = int(locked.balance_fen or 0) + active_grant_fen(user)
     if available < required:
         raise ValueError(
-            f"余额不足：批量生成 {qty} 项需 ¥{additional/100:.2f}"
+            f"额度不足：批量生成 {qty} 项需 ¥{additional/100:.2f}"
             f"（含排队中 ¥{pending/100:.2f}），当前 ¥{available/100:.2f}，请先充值"
         )
     return {
@@ -185,22 +199,40 @@ async def freeze_for_task(db: AsyncSession, task: TaskRun) -> int:
         await db.flush()
         return 0
     need = await estimate_task_fen(db, task)
+    expire_user_grant(db, user)  # 惰性清零：到期 grant 池不进可用额度
+    g_take, b_need = grant_take(user, need)
     available = int(user.balance_fen or 0)
-    if available < need:
-        raise ValueError(f"余额不足：需要 ¥{need/100:.2f}，当前 ¥{available/100:.2f}，请先充值")
-    # 仅通过 _ledger 扣余额，避免双重扣款
-    user.frozen_fen = int(user.frozen_fen or 0) + need
+    if available < b_need:
+        raise ValueError(
+            f"额度不足：需要 ¥{need/100:.2f}（专属额度承担 ¥{g_take/100:.2f}，"
+            f"余额需补 ¥{b_need/100:.2f}），当前余额 ¥{available/100:.2f}，请先充值"
+        )
+    # grant 池优先冻结
+    if g_take > 0:
+        user.grant_fen = int(user.grant_fen or 0) - g_take
+        user.frozen_grant_fen = int(user.frozen_grant_fen or 0) + g_take
+        db.add(
+            WalletLedger(
+                user_id=int(user.id),
+                delta_fen=-g_take,
+                balance_after=int(user.grant_fen or 0),
+                kind="grant_freeze",
+                ref_type="task_run",
+                ref_id=str(task.id),
+                note=f"grant_freeze:{task.domain}/{task.task_type}",
+            )
+        )
+    # 余额池补差
+    if b_need > 0:
+        user.frozen_fen = int(user.frozen_fen or 0) + b_need
+        await _ledger(
+            db, user, -b_need, "freeze",
+            ref_type="task_run", ref_id=str(task.id),
+            note=f"freeze:{task.domain}/{task.task_type}",
+        )
     task.billing_estimate_fen = need
+    task.billing_frozen_grant_fen = g_take
     task.billing_status = "frozen"
-    await _ledger(
-        db,
-        user,
-        -need,
-        "freeze",
-        ref_type="task_run",
-        ref_id=str(task.id),
-        note=f"freeze:{task.domain}/{task.task_type}",
-    )
     await db.flush()
     return need
 
@@ -299,37 +331,69 @@ async def settle_task(db: AsyncSession, task_id: int) -> dict[str, int]:
         return {"charged": charged, "refunded": 0}
 
     frozen_for_task = int(task.billing_estimate_fen or 0)
-    user.frozen_fen = max(0, int(user.frozen_fen or 0) - frozen_for_task)
+    # 本任务冻结在 grant 池的金额（freeze 时已拆分）
+    g_frozen = int(getattr(task, "billing_frozen_grant_fen", 0) or 0)
+    b_frozen = max(0, frozen_for_task - g_frozen)
+    expire_user_grant(db, user)  # 到期 grant 池：冻结额随池作废，不回池
+    user.frozen_fen = max(0, int(user.frozen_fen or 0) - b_frozen)
+    user.frozen_grant_fen = max(0, int(user.frozen_grant_fen or 0) - g_frozen)
     extra = max(0, charged - frozen_for_task)
     refund = max(0, frozen_for_task - charged)
 
-    if extra > 0:
-        logger.warning(
-            "settle overage user=%s task=%s extra_fen=%s balance=%s",
-            user.id,
-            task_id,
-            extra,
-            user.balance_fen,
-        )
-        await _ledger(
-            db,
-            user,
-            -extra,
-            "settle",
-            ref_type="task_run",
-            ref_id=str(task_id),
-            note="settle_overage",
-        )
+    # 退款回源池：grant 部分优先回池（池已到期则随池作废）
     if refund > 0:
-        await _ledger(
-            db,
-            user,
-            refund,
-            "unfreeze",
-            ref_type="task_run",
-            ref_id=str(task_id),
-            note="refund_unused_freeze",
-        )
+        refund_grant = 0
+        if g_frozen > 0 and not grant_expired(user):
+            refund_grant = min(g_frozen, refund)
+            user.grant_fen = int(user.grant_fen or 0) + refund_grant
+            db.add(
+                WalletLedger(
+                    user_id=int(user.id),
+                    delta_fen=refund_grant,
+                    balance_after=int(user.grant_fen or 0),
+                    kind="grant_unfreeze",
+                    ref_type="task_run",
+                    ref_id=str(task_id),
+                    note=f"grant_refund_unused_freeze={refund_grant}",
+                )
+            )
+        refund_balance = refund - refund_grant
+        if refund_balance > 0:
+            await _ledger(
+                db, user, refund_balance, "unfreeze",
+                ref_type="task_run", ref_id=str(task_id),
+                note="refund_unused_freeze",
+            )
+
+    if extra > 0:
+        # 超收：优先扣可用 grant 池，余额补差
+        take_g = 0
+        if not grant_expired(user):
+            take_g = min(extra, active_grant_fen(user))
+        if take_g > 0:
+            user.grant_fen = int(user.grant_fen or 0) - take_g
+            db.add(
+                WalletLedger(
+                    user_id=int(user.id),
+                    delta_fen=-take_g,
+                    balance_after=int(user.grant_fen or 0),
+                    kind="grant_settle",
+                    ref_type="task_run",
+                    ref_id=str(task_id),
+                    note=f"settle_overage_grant={take_g}",
+                )
+            )
+        extra_balance = extra - take_g
+        if extra_balance > 0:
+            logger.warning(
+                "settle overage user=%s task=%s extra_fen=%s balance=%s",
+                user.id, task_id, extra_balance, user.balance_fen,
+            )
+            await _ledger(
+                db, user, -extra_balance, "settle",
+                ref_type="task_run", ref_id=str(task_id),
+                note="settle_overage",
+            )
 
     task.billing_charged_fen = charged
     task.billing_refunded_fen = refund
@@ -456,20 +520,42 @@ async def settle_usage_charge(
     need = max(0, int(charge_fen))
     if need <= 0:
         return
+    from app.services.billing.grant_pool import active_grant_fen, expire_user_grant, grant_expired
     locked = await _lock_user(db, int(user.id))
     target = locked or user
+    expire_user_grant(db, target)
+    g_take = 0 if grant_expired(target) else min(need, active_grant_fen(target))
+    b_need = need - g_take
     available = int(target.balance_fen or 0)
-    if available < need:
-        raise ValueError(f"余额不足：需要 ¥{need / 100:.2f}，当前 ¥{available / 100:.2f}，请先充值")
-    await _ledger(
-        db,
-        target,
-        -need,
-        "settle",
-        ref_type=ref_type,
-        ref_id=ref_id,
-        note="api_usage",
-    )
+    if available < b_need:
+        raise ValueError(
+            f"额度不足：需要 ¥{need / 100:.2f}"
+            f"（专属额度承担 ¥{g_take / 100:.2f}，余额需补 ¥{b_need / 100:.2f}），"
+            f"当前余额 ¥{available / 100:.2f}，请先充值"
+        )
+    if g_take > 0:
+        target.grant_fen = int(target.grant_fen or 0) - g_take
+        db.add(
+            WalletLedger(
+                user_id=int(target.id),
+                delta_fen=-g_take,
+                balance_after=int(target.grant_fen or 0),
+                kind="grant_settle",
+                ref_type=ref_type,
+                ref_id=ref_id,
+                note="api_usage_grant",
+            )
+        )
+    if b_need > 0:
+        await _ledger(
+            db,
+            target,
+            -b_need,
+            "settle",
+            ref_type=ref_type,
+            ref_id=ref_id,
+            note="api_usage",
+        )
     if locked is not None and locked is not user:
         user.balance_fen = locked.balance_fen
         user.frozen_fen = locked.frozen_fen

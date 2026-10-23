@@ -47,8 +47,6 @@ function nativeUpdateManaged(): boolean {
 }
 
 export function AppUpdateBanner() {
-  // 单机开源版：无在线更新，直接返回 null
-  if (typeof window !== 'undefined' && (window as any).__PRINTFILM_STANDALONE__) return null
   const platform = useRef<Platform | 'web'>(detectShell())
   const [info, setInfo] = useState<UpdateInfo | null>(null)
   const [dismissed, setDismissed] = useState(false)

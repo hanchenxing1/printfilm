@@ -63,6 +63,8 @@ class TaskRun(Base):
     billing_charged_fen: Mapped[int] = mapped_column(Integer, default=0)
     billing_refunded_fen: Mapped[int] = mapped_column(Integer, default=0)
     billing_status: Mapped[str] = mapped_column(String(16), default="none", index=True)
+    # 本任务冻结在专属额度池的金额（分）；结算按此回池，grant 池到期则清零
+    billing_frozen_grant_fen: Mapped[int] = mapped_column(Integer, default=0)
 
     targets: Mapped[list["TaskTarget"]] = relationship(
         back_populates="task", cascade="all, delete-orphan"

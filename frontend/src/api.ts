@@ -218,12 +218,54 @@ export type User = {
   phone?: string
 }
 
+export type BillingSkuPerks = {
+  llm_free?: boolean
+  image_calls_per_day?: number
+  video_priority_minutes_per_day?: number
+}
+
 export type BillingSku = {
   id: string
   name: string
   amount_fen: number
   credit_fen: number
   recommended?: boolean
+  /** topup = 一次性充值包；subscription = 订阅档位（周期自动续费） */
+  kind?: 'topup' | 'subscription'
+  plan?: 'plus' | 'pro'
+  period_days?: number
+  perks?: BillingSkuPerks
+  /** 自定义金额充值（topup_custom）：下单需传 amount_fen，到账=充值金额 */
+  custom_amount?: boolean
+  min_amount_fen?: number
+  max_amount_fen?: number
+}
+
+export type SubscriptionStatus = {
+  id: number
+  sku_id: string
+  plan: string
+  status: 'active' | 'lapsed' | 'cancelled'
+  amount_fen: number
+  period_days: number
+  perks: BillingSkuPerks
+  expires_at: string | null
+  last_renewed_at: string | null
+  lapsed_at: string | null
+  cancelled_at: string | null
+  auto_renew: boolean
+}
+
+export type PerksUsage = {
+  day_start_cn: string
+  image_calls: number
+  video_seconds: number
+}
+
+export type SubscriptionState = {
+  active: boolean
+  subscription: SubscriptionStatus | null
+  perks_usage?: PerksUsage
 }
 
 export type BillingOrder = {
@@ -275,6 +317,13 @@ export type Wallet = {
   frozen_fen: number
   balance_yuan: number
   frozen_yuan: number
+  /** 注册专属额度池（优先扣，到期清零） */
+  grant_fen?: number
+  frozen_grant_fen?: number
+  grant_yuan?: number
+  grant_expire_at?: string | null
+  total_available_fen?: number
+  total_available_yuan?: number
   plan: string
   billing_enabled: boolean
   markup: number
@@ -597,7 +646,13 @@ export const api = {
   billingSkus() {
     return request<{ skus: BillingSku[]; pay_types: string[]; markup: number }>('/api/billing/skus')
   },
-  createBillingOrder(sku_id: string, pay_type: 'alipay' | 'wxpay') {
+  subscriptionStatus() {
+    return request<SubscriptionState>('/api/billing/subscription')
+  },
+  cancelSubscription() {
+    return request<{ cancelled: boolean; expires_at?: string; reason?: string }>('/api/billing/subscription/cancel', { method: 'POST' })
+  },
+  createBillingOrder(sku_id: string, pay_type: 'alipay' | 'wxpay', amount_fen?: number) {
     return request<{
       out_trade_no: string
       sku_id: string
@@ -616,7 +671,7 @@ export const api = {
       expire_seconds?: number
     }>('/api/billing/orders', {
       method: 'POST',
-      body: JSON.stringify({ sku_id, pay_type }),
+      body: JSON.stringify(amount_fen !== undefined ? { sku_id, pay_type, amount_fen } : { sku_id, pay_type }),
     })
   },
   getBillingOrder(outTradeNo: string) {

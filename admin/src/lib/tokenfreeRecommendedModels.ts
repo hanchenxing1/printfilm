@@ -5,15 +5,18 @@ export type PresetModelOption = { id: string; label: string };
 /** 与后端 media_model_presets.PRESET_MODELS 对齐 */
 export const PRESET_MODELS: Record<ModelCapability, PresetModelOption[]> = {
   text: [
+    { id: "agnes-3.0-flash", label: "Agnes 3.0 Flash" },
     { id: "kimi-k2.6", label: "Kimi K2.6" },
     { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro" },
     { id: "gpt-5.5", label: "GPT 5.5" },
   ],
   image: [
+    { id: "agnes-image-2.5-flash", label: "Agnes Image 2.5 Flash" },
     { id: "seedream-5-0-pro", label: "Seedream 5.0 Pro" },
     { id: "gpt-image-2", label: "GPT Image 2" },
   ],
   video: [
+    { id: "agnes-video-2.5-flash", label: "Agnes Video 2.5 Flash" },
     { id: "seedance-2-0", label: "Seedance 2.0" },
     { id: "seedance-2-0-mini", label: "Seedance 2.0 Mini" },
     { id: "seedance-2-5", label: "Seedance 2.5" },

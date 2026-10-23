@@ -1,57 +1,90 @@
-# --- 数据与运行时产物（不入库） ---
-data/
-*.db
-*.sqlite*
+﻿# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+
+# Logs & local scratch (batch ops, polls, tokens)
+*.log
+.tmp/
+.tmp/**
+agent-tools/
+# IDE 粘贴截图默认落仓库根 images/；文档截图请放到 docs/images/
+/images/
+
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.egg-info/
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+backend/.venv/
 .venv/
 venv/
 
-# --- 嵌入式二进制（体积大，按构建产物处理，不入库） ---
-python/
-ffmpeg/
-electron/node_modules/
-desktop/
+# Secrets & local env（仅允许 *.example 与 frontend/.env.production）
+.env
+.env.*
+!.env.example
+!.env.*.example
+!**/.env.example
+!**/.env.*.example
+!frontend/.env.production
+deploy/scripts/deploy_kepu.py
+deploy/scripts/deploy_kepu_8136.py
+deploy/scripts/deploy_kepu*.py
 
-# --- 日志与临时文件 ---
-*.log
-run.log
-run.err.log
-embedded.log
-embedded.err.log
-backend_py.log
-backend_py_embedded.log
-*.err.log
-*.out
+# 现网发布记录、内部报表、杭州部署手册（不上开源仓库）
+docs/releases/
+docs/reports/
+docs/DEPLOY.md
 
-# --- 一次性补丁/探测脚本（开发态遗留，不入库） ---
-_patch_*.py
-_probe_*.py
-_e2e_*.py
-_find_*.py
-_test_api.*
+# Never commit tokens / credentials dumps / private keys
+**/token.txt
+**/*credentials*.json
+**/secrets.json
+**/*secret*.json
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/*.ppk
+id_rsa
+id_ed25519
+*.id_rsa
+*.id_ed25519
+!**/example*.pem
+.netrc
+.npmrc
 
-# --- 前端构建产物（frontend 源码保留，构建产物排除） ---
-frontend/dist/
-frontend/build/
-frontend/out/
-frontend/.vite/
-frontend/.next/
+# Backend runtime data
+backend/ai_movie.db
+backend/*.db
+backend/.celery_autoscale/
+backend/static/generated/
+backend/static/voice_previews/
+backend/frontend/
+
+# Frontend build
 frontend/node_modules/
+frontend/dist/
 
-# --- Agnes key 等敏感凭据 ---
-data/agnes_keys.json
-*.env
-.env.local
+# 本地 Agent / IDE（不上库）
+.claude/
+.cursor/
+.work/
 
-# --- 编辑器 / 系统 ---
-.idea/
-.vscode/
-.DS_Store
-Thumbs.db
-# --- ����/���������ű��뿪������������⣩ ---
+# 调查/部署期一次性脚本与快照（agent 会话产物，不入版本库）
+_commit_split.py
 frontend/_*.py
 frontend/_*.sh
-_commit_scope.txt
-_add_list.txt
+frontend/_*.txt
+frontend/_stage156/
+frontend/_srcsnap_*/
+frontend/frontend_src_merged_*.tar.gz

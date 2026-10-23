@@ -9,7 +9,7 @@ from sqlalchemy import select, text
 
 from app.api import auth, billing, projects, tasks, templates, tools
 from app.api import api_keys as user_api_keys
-from app.api import agnes_keys as user_agnes_keys
+from app.api import update as update_api
 from app.api.v1 import router as v1_router
 from app.api.admin import router as admin_router
 from app.api.drama import router as drama_router
@@ -90,10 +90,10 @@ app.include_router(tasks.router, prefix="/api")
 app.include_router(billing.router, prefix="/api")
 app.include_router(tools.router, prefix="/api")
 app.include_router(user_api_keys.router, prefix="/api")
-app.include_router(user_agnes_keys.router, prefix="/api")
 app.include_router(v1_router, prefix="/api")
 app.include_router(drama_router, prefix="/api")
 app.include_router(admin_router, prefix="/api")
+app.include_router(update_api.router, prefix="/api")
 
 
 @app.on_event("startup")
@@ -193,6 +193,12 @@ async def _apply_schema_patches() -> None:
             await conn.execute(
                 text("ALTER TABLE users ADD COLUMN billing_alert_last_milestone_fen INTEGER DEFAULT 0")
             )
+        if "grant_fen" not in ucols:
+            await conn.execute(text("ALTER TABLE users ADD COLUMN grant_fen INTEGER DEFAULT 0"))
+        if "frozen_grant_fen" not in ucols:
+            await conn.execute(text("ALTER TABLE users ADD COLUMN frozen_grant_fen INTEGER DEFAULT 0"))
+        if "grant_expire_at" not in ucols:
+            await conn.execute(text("ALTER TABLE users ADD COLUMN grant_expire_at TIMESTAMP WITH TIME ZONE"))
 
         # UsageEvent.drama_project_id for drama module billing
         uecols = await _pg_columns(conn, "usage_events")
@@ -231,6 +237,8 @@ async def _apply_schema_patches() -> None:
             await conn.execute(text("ALTER TABLE task_runs ADD COLUMN billing_refunded_fen INTEGER DEFAULT 0"))
         if "billing_status" not in trcols:
             await conn.execute(text("ALTER TABLE task_runs ADD COLUMN billing_status VARCHAR(16) DEFAULT 'none'"))
+        if "billing_frozen_grant_fen" not in trcols:
+            await conn.execute(text("ALTER TABLE task_runs ADD COLUMN billing_frozen_grant_fen INTEGER DEFAULT 0"))
 
         # Drop leftover worker-era columns that block the new task platform.
         legacy_task_run_cols = (

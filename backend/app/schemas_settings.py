@@ -106,11 +106,18 @@ class AdminModelSettingsOut(BaseModel):
     billing_seedream_per_m: float = 8.0
     billing_tts_per_m: float = 2.0
     billing_kie_fen_per_credit: float = 3.5
+    # 平台固定价目（估算/实扣同口径）
+    billing_use_platform_pricing: bool = True
+    billing_llm_fen_per_500: int = 1
+    billing_image_fen_per_image: int = 3
+    billing_video_fen_per_sec: int = 1
+    billing_tts_free: bool = True
     billing_est_llm_tokens: int = 80_000
     billing_est_seedream_tokens: int = 45_000
     billing_est_tts_tokens: int = 5_000
     billing_est_seedance_tokens_per_sec: int = 32_000
-    billing_signup_grant_fen: int = 500
+    billing_signup_grant_fen: int = 1000
+    billing_signup_grant_days: int = 7
     quota_enabled: bool = False
     new_user_quota: int = 5
 
@@ -227,11 +234,17 @@ class AdminModelSettingsPatch(BaseModel):
     billing_seedream_per_m: float | None = None
     billing_tts_per_m: float | None = None
     billing_kie_fen_per_credit: float | None = None
+    billing_use_platform_pricing: bool | None = None
+    billing_llm_fen_per_500: int | None = None
+    billing_image_fen_per_image: int | None = None
+    billing_video_fen_per_sec: int | None = None
+    billing_tts_free: bool | None = None
     billing_est_llm_tokens: int | None = None
     billing_est_seedream_tokens: int | None = None
     billing_est_tts_tokens: int | None = None
     billing_est_seedance_tokens_per_sec: int | None = None
     billing_signup_grant_fen: int | None = None
+    billing_signup_grant_days: int | None = None
     quota_enabled: bool | None = None
     new_user_quota: int | None = None
 
@@ -339,11 +352,17 @@ def model_config_field_names() -> tuple[str, ...]:
         "billing_seedream_per_m",
         "billing_tts_per_m",
         "billing_kie_fen_per_credit",
+        "billing_use_platform_pricing",
+        "billing_llm_fen_per_500",
+        "billing_image_fen_per_image",
+        "billing_video_fen_per_sec",
+        "billing_tts_free",
         "billing_est_llm_tokens",
         "billing_est_seedream_tokens",
         "billing_est_tts_tokens",
         "billing_est_seedance_tokens_per_sec",
         "billing_signup_grant_fen",
+        "billing_signup_grant_days",
         "quota_enabled",
         "new_user_quota",
         "billing_user_alert_enabled",

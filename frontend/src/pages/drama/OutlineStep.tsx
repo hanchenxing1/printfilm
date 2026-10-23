@@ -16,6 +16,7 @@ import {
 } from './dramaWorkspaceUtils'
 import { dialog } from '../../lib/dialog'
 import Modal from '../../components/ui/Modal'
+import { DramaEpisodeDurationPopover } from './DramaEpisodeDurationPopover'
 import { DramaImageStyleModal } from './DramaImageStyleModal'
 import { DramaProjectSettingsModal } from './DramaProjectSettingsModal'
 import { OutlineEpisodePanel } from './OutlineEpisodePanel'
@@ -65,6 +66,19 @@ export function OutlineStep({
         project.params?.episode_count,
     ) || 0
   const imageStyleId = getImageStyleId(script, project)
+  const episodeDurationSec = Number((project.params || {}).episode_duration_sec || 60)
+
+  // 更新每集时长（写回项目参数，驱动后续正文与分镜）
+  async function handleDurationChange(sec: number) {
+    try {
+      const p = await dramaApi.updateProject(projectId, {
+        params: { ...(project.params || {}), episode_duration_sec: sec },
+      })
+      onProjectChange(p)
+    } catch (err) {
+      onError(err instanceof Error ? err.message : '时长更新失败')
+    }
+  }
 
   function openSourceModal() {
     setSourceEditing(false)
@@ -340,6 +354,10 @@ export function OutlineStep({
             emptyLabel="未选择"
             value={(imageStyleId as ImageStyleId | '') || ''}
             onChange={(id) => void handleStyleChange(id)}
+          />
+          <DramaEpisodeDurationPopover
+            value={episodeDurationSec}
+            onChange={(sec) => void handleDurationChange(sec)}
           />
           <span className="drama-outline-toolbar-meta">
             {episodeCount ? `共 ${episodeCount} 集` : '集数待定'}

@@ -8,6 +8,7 @@ type Props = {
 }
 
 const SKU_LABELS: Record<string, string> = {
+  topup_custom: '余额充值',
   topup_10: '体验充值',
   topup_49: '基础充值',
   topup_99: '进阶充值',

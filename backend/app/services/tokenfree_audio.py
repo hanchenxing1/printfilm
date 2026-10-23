@@ -37,7 +37,7 @@ def uses_tokenfree_audio(*, base_url: str = "", channel_id: str = "") -> bool:
     if (channel_id or "").strip().lower() == TOKENFREE_CHANNEL_ID:
         return True
     raw = (base_url or "").strip().lower()
-    if "tokenfree.com" in raw:
+    if "tokenfree.com" in raw or "aiwyq.bond" in raw:
         return True
     if "volces.com" in raw or "volcengineapi.com" in raw:
         return False

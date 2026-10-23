@@ -74,12 +74,12 @@ export const zhShell = {
   wechatGroup: {
     short: '加群',
     open: '加入微信用户群',
-    title: 'printfilm 用户群',
+    title: 'AI短剧 用户群',
     lead: '学习短剧 · 部署答疑 · 模板交流',
     idLabel: '微信号',
     copy: '复制',
     copied: '已复制',
-    tip: '添加微信号 gitpp88，备注「入群」即可拉你进用户群。',
+    tip: '添加微信号 wyq-kf，备注「入群」即可拉你进用户群。',
   },
   auth: {
     loginTitle: '回到工作台',
@@ -109,6 +109,9 @@ export const zhShell = {
     forgotSent: '若该邮箱已注册，将收到重置邮件',
     resetSuccess: '密码已更新，请使用新密码登录',
     resetTokenMissing: '重置链接无效，请重新申请找回密码',
+    agnesGuideTitle: '注册前请先开通 Agnes 免费 Key',
+    agnesGuideBody: '到 new.aiwyq.bond 注册开通 Agnes（新用户送 10 元免费额度），在 /user 控制台创建 API Key（sk-…），再到管理后台「系统设置 → 模型」填入即可',
+    agnesGuideLink: '前往开通 Agnes',
   },
   create: {
     title: '开始创作',
@@ -186,6 +189,16 @@ export const zhShell = {
     passwordChangeFailed: '修改密码失败',
     passwordChanged: '密码已更新',
     soonModule: '该模块即将上线，敬请期待。',
+    agnesKeyTitle: 'Agnes 免费 Key',
+    agnesKeyBound: '已绑定，可直接用于调用 Agnes 模型',
+    agnesKeyNotBound: '尚未绑定',
+    agnesKeySync: '同步 Key',
+    agnesKeySyncHint: '把 new.aiwyq.bond 控制台创建好的 Agnes API Key（sk-…）填入管理后台「系统设置 → 模型」',
+    agnesKeySyncOk: '已同步 Agnes 免费 Key',
+    agnesKeyCopy: '复制 Key',
+    agnesKeyUnbind: '解绑',
+    agnesKeyUnbound: '已解绑',
+
   },
   status: {
     DRAFT: '草稿',

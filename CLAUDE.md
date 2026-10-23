@@ -60,13 +60,11 @@ pytest tests/test_x.py::test_name       # 单测
 
 `api/drama/` + `services/drama/`（30+ 小文件，按 jobs/fragment/voice/asset 等拆分）+ `models_drama.py`（projects→scripts→episodes→fragments→asset_refs）。分镜视频是一镜一 TaskRun（`fragment_video`），有预算、最大尝试次数与排队上限（见 config 中 `DRAMA_*`）。产品规则见 `docs/EPISODE_RULES.md`、`docs/SHOT_SPLITTING.md`。
 
-### 模型路由：上游统一为 Agnes 官方 API
+### 模型路由：上游被锁定为 TokenFree
 
-开源版文字 / 图 / 视频全部走 **Agnes 官方 API**（https://apihub.agnes-ai.com/v1，OpenAI 兼容），由 services/agnes_client.py + services/ark.py 承接（Key 池轮转 + RPM 节流 + 429 退避）。Key 可在**个人中心 → API** 或**管理后台「系统设置 → 模型」**填写；启动/保存后经 model_settings.py 生成 overlay，config.get_settings()（lru_cache）以 model_copy(update=overlay) 叠加到 env 配置之上——所以运行时配置以 DB overlay 优先，.env 仅首次导入。逻辑模型→渠道解析在 logical_model_router.py（缺少 OpenAI 渠道时自动回退 Agnes 路由）。无 Key 联调设 ARK_MOCK=true 走本地 mock 素材。
+开源版**文字 / 图 / 视频统一走 Agnes 官方 API 网关**（New API 兼容 `https://new.aiwyq.bond/v1`，文本与图/视频共用同一把 Key；申请：`https://new.aiwyq.bond` 注册送 10 元免费额度），由 `services/tokenfree_gateway.py` 锁定渠道（Base URL/协议不可改）。Key 与模型在**管理后台「系统设置 → 模型」**配置，存 `system_model_channels` / `app_settings` 表；启动/保存后经 `model_settings.py` 生成 overlay，`config.get_settings()`（lru_cache）以 `model_copy(update=overlay)` 叠加到 env 配置之上——所以运行时配置以 DB overlay 优先，`.env` 仅首次导入。逻辑模型→渠道绑定（priority/weight/failover）解析在 `logical_model_router.py`。无 Key 联调设 `ARK_MOCK=true` 走本地 mock 素材。
 
-全局模型名统一 agnes 系列：文本 gnes-3.0-flash、图 gnes-image-2.5-flash、视频 gnes-video-2.5-flash。多账号 Key 池用 AGNES_API_KEYS（逗号分隔，429 自动轮换）；本地部署 Key 存取在 services/agnes_key_store.py（data/agnes_keys.json）。
-
-文本 llm_client.py；图/视频走 rk.py（Agnes i2v / 图片端点）。
+文本 `llm_client.py`；图/视频走 `ark.py` + `tokenfree_image.py` / `tokenfree_video.py`；配音豆包 openspeech（`VOLC_TTS_*`，与方舟 Key 不同），未配则回退 edge-tts。
 
 ### 计费：每个 TaskRun 走「预扣 → 用量行 → 结算」
 

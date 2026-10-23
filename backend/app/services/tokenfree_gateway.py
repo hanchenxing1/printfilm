@@ -1,4 +1,4 @@
-"""开源版固定对接 TokenFree New API，不允许切换其它上游。"""
+"""开源版统一走 Agnes 官方 API 网关（new.aiwyq.bond）；渠道 Base/协议锁定不可改。"""
 
 from __future__ import annotations
 
@@ -7,10 +7,10 @@ from typing import Any
 from app.schemas_routing import SystemModelChannel
 
 TOKENFREE_CHANNEL_ID = "tokenfree"
-TOKENFREE_CHANNEL_NAME = "TokenFree New API"
+TOKENFREE_CHANNEL_NAME = "Agnes 官方 API 网关"
 # New API OpenAI 兼容根路径（/channels 是控制台，不是接口）
-TOKENFREE_BASE_URL = "https://www.tokenfree.com/v1"
-TOKENFREE_CONSOLE_URL = "https://www.tokenfree.com/channels"
+TOKENFREE_BASE_URL = "https://new.aiwyq.bond/v1"
+TOKENFREE_CONSOLE_URL = "https://new.aiwyq.bond/user"
 # New API 内部额度：500000 quota = 1 USD
 TOKENFREE_QUOTA_PER_USD = 500_000
 

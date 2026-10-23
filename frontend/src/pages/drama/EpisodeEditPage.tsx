@@ -1,5 +1,6 @@
 /** 分集编辑：复刻原项目四栏布局（资产 / 脚本 / 预览 / 故事板） */
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   dramaApi,
@@ -49,7 +50,7 @@ import {
 import { DramaFragmentClipSpec } from '../../components/drama/DramaFragmentClipSpec'
 import { FragmentPlanSkillModal } from '../../components/drama/FragmentPlanSkillModal'
 import { DramaGenTaskDetail } from '../../components/drama/DramaGenTaskDetail'
-import { CircleAlert } from 'lucide-react'
+import { CircleAlert, X } from 'lucide-react'
 import { useDramaImageGenQueue } from '../../hooks/useDramaImageGenQueue'
 import { useMediaModelsCatalog } from '../../hooks/useMediaModelsCatalog'
 import { enqueueDramaImageGen } from '../../lib/dramaImageGenQueue'
@@ -144,6 +145,18 @@ function EpisodeEditInner() {
   const [episode, setEpisode] = useState<DramaEpisode | null>(null)
   const [episodeList, setEpisodeList] = useState<DramaEpisode[]>([])
   const [fragments, setFragments] = useState<DramaFragment[]>([])
+  // 分镜条点击已生成视频片段 → 页内全屏预览浮层
+  const [previewFrag, setPreviewFrag] = useState<{ label: string; video: string; poster?: string } | null>(null)
+
+  useEffect(() => {
+    if (!previewFrag) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setPreviewFrag(null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [previewFrag])
+
   const [assets, setAssets] = useState<DramaAsset[]>([])
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [assetScope, setAssetScope] = useState<AssetScope>('episode')
@@ -1405,8 +1418,18 @@ function EpisodeEditInner() {
   // 当前预览/选中分镜 id（与底部分镜条、脚本编辑联动）
   const playingFragmentId = selected?.id ?? null
 
+
+  function openFragmentPreview(frag: (typeof fragments)[number], index: number) {
+    const video = frag.video ? resolveDramaMediaUrl(frag.video) : ''
+    if (!video) return
+    const poster = frag.cover ? resolveDramaMediaUrl(frag.cover) : ''
+    setPreviewFrag({ label: formatFragLabel(index, frag.duration_sec), video, poster })
+  }
+
   // 切换预览分镜时同步底部分镜选中态
   function handlePlayingFragmentChange(fragmentId: number) {
+
+
     const index = fragments.findIndex((f) => f.id === fragmentId)
     if (index >= 0) {
       setSelectedIndex(index)
@@ -1785,9 +1808,14 @@ function EpisodeEditInner() {
               >
                 <button
                   type="button"
-                  className="drama-ep-clip"
-                  onClick={() => setSelectedIndex(index)}
+                  className={`drama-ep-clip${clipVideo ? ' is-video' : ''}${selectedIndex === index ? ' active' : ''}`}
+                  title={clipVideo ? '点击预览视频' : undefined}
+                  onClick={() => {
+                    setSelectedIndex(index)
+                    if (clipVideo) openFragmentPreview(frag, index)
+                  }}
                 >
+
                   {clipCover ? (
                     <img src={clipCover} alt="" />
                   ) : clipVideo ? (
@@ -1846,7 +1874,46 @@ function EpisodeEditInner() {
         </div>
       </footer>
 
+      {previewFrag
+        ? createPortal(
+            <div
+              className="drama-ep-frag-preview-overlay"
+              onClick={() => setPreviewFrag(null)}
+              role="dialog"
+              aria-modal="true"
+              aria-label={"预览 " + previewFrag.label}
+            >
+              <div className="drama-ep-frag-preview" onClick={(e) => e.stopPropagation()}>
+                <div className="drama-ep-frag-preview-head">
+                  <span className="drama-ep-frag-preview-title">
+                    预览 · {previewFrag.label}
+                  </span>
+                  <button
+                    type="button"
+                    className="drama-ep-frag-preview-close"
+                    aria-label="关闭预览"
+                    onClick={() => setPreviewFrag(null)}
+                  >
+                    <X size={18} strokeWidth={2} />
+                  </button>
+                </div>
+                <video
+                  key={previewFrag.video}
+                  className="drama-ep-frag-preview-video"
+                  src={previewFrag.video}
+                  poster={previewFrag.poster || undefined}
+                  controls
+                  autoPlay
+                  playsInline
+                />
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+
       <FragmentPlanSkillModal
+
         open={planModalOpen}
         message="将调用大模型按本集剧本重新规划分镜（覆盖并清空现有分镜与已生成镜头），通常需要数十秒。可勾选本次使用的 Skill。字幕方式沿用顶栏当前设置。"
         onCancel={() => setPlanModalOpen(false)}

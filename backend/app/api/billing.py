@@ -39,11 +39,24 @@ class CreateOrderBody(BaseModel):
 
 @router.get("/wallet")
 async def wallet(user: User = Depends(get_current_user)) -> dict:
+    from app.services.billing.grant_pool import active_grant_fen, grant_expired
+    user.grant_fen = int(user.grant_fen or 0)
+    user.frozen_grant_fen = int(user.frozen_grant_fen or 0)
+    grant_active = 0 if grant_expired(user) else int(user.grant_fen or 0)
+    grant_frozen = 0 if grant_expired(user) else int(user.frozen_grant_fen or 0)
     return {
         "balance_fen": int(user.balance_fen or 0),
         "frozen_fen": int(user.frozen_fen or 0),
         "balance_yuan": round(int(user.balance_fen or 0) / 100, 2),
         "frozen_yuan": round(int(user.frozen_fen or 0) / 100, 2),
+        # 专属额度池
+        "grant_fen": grant_active,
+        "frozen_grant_fen": grant_frozen,
+        "grant_yuan": round(grant_active / 100, 2),
+        "grant_expire_at": user.grant_expire_at.isoformat() if user.grant_expire_at else None,
+        "grant_total_fen": grant_active + grant_frozen,
+        "total_available_fen": int(user.balance_fen or 0) + grant_active,
+        "total_available_yuan": round((int(user.balance_fen or 0) + grant_active) / 100, 2),
         "plan": user.plan or "free",
         "billing_enabled": settings.billing_enabled,
         "markup": settings.billing_markup,

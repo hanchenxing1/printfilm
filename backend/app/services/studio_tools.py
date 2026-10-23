@@ -79,11 +79,10 @@ def ratio_to_size(ratio: str | None) -> str:
 
 # 时长芯片（5s/10s/15s）转秒
 def duration_seconds(raw: str | None) -> int:
-    """把前端时长值（"5s" / "5" / 10 等）统一转成秒数，钳到 4–15。"""
-    text = str(raw if raw is not None else "5s").strip().lower().replace("s", "")
+    text = (raw or "5s").strip().lower().replace("s", "")
     try:
-        n = int(float(text))
-    except (TypeError, ValueError):
+        n = int(text)
+    except ValueError:
         n = 5
     return max(4, min(n, 15))
 
@@ -372,26 +371,6 @@ async def start_video_tool(
     motion: str | None,
     files: list[Path],
 ) -> dict:
-    from app.services.agnes_keys import user_agnes_scope
-
-    async with user_agnes_scope(db, user):
-        return await _start_video_tool_body(
-            db, user, tool_id=tool_id, prompt=prompt, ratio=ratio,
-            duration_raw=duration_raw, motion=motion, files=files,
-        )
-
-
-async def _start_video_tool_body(
-    db: AsyncSession,
-    user: User,
-    *,
-    tool_id: str,
-    prompt: str,
-    ratio: str | None,
-    duration_raw: str | None,
-    motion: str | None,
-    files: list[Path],
-) -> dict:
     ark = get_ark()
     duration = duration_seconds(duration_raw)
     still_path: Path | None = None
@@ -463,15 +442,6 @@ async def _start_video_tool_body(
 
 # 单次查询视频任务；成功则下载并同步 OSS
 async def poll_video_task(user: User, task_id: str) -> dict:
-    from app.database import AsyncSessionLocal
-    from app.services.agnes_keys import user_agnes_scope
-
-    async with AsyncSessionLocal() as db:
-        async with user_agnes_scope(db, user):
-            return await _poll_video_task_body(user, task_id)
-
-
-async def _poll_video_task_body(user: User, task_id: str) -> dict:
     ark = get_ark()
     result = await ark.fetch_task_once(task_id)
     usage = {

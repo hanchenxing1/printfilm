@@ -1,4 +1,4 @@
-/** Seedance 传值与脚本规则说明弹窗（分集编辑页，对齐 docs/EPISODE_RULES.md） */
+/** Agnes 传值与脚本规则说明弹窗（分集编辑页，对齐 docs/EPISODE_RULES.md） */
 import { useState } from 'react'
 import Modal from '../ui/Modal'
 import {
@@ -21,7 +21,7 @@ type Props = {
   onClose: () => void
 }
 
-// 渲染 Seedance 规则说明弹窗
+// 渲染 Agnes 规则说明弹窗
 export function SeedanceRulesModal({ open, onClose }: Props) {
   const [tab, setTab] = useState<Tab>('payload')
 
@@ -29,7 +29,7 @@ export function SeedanceRulesModal({ open, onClose }: Props) {
     <Modal
       open={open}
       onClose={onClose}
-      title="Seedance 传值与使用规则"
+      title="Agnes 传值与使用规则"
       size="lg"
       className="pf-help-modal seedance-rules-modal"
       footer={
@@ -40,11 +40,11 @@ export function SeedanceRulesModal({ open, onClose }: Props) {
     >
       <div className="pf-help">
         <p className="pf-help-lede">
-          分镜视频由 Seedance 多模态接口生成。下方说明系统如何把脚本、资产与顶栏参数组装成请求，以及漫剧分集脚本写法（详见{' '}
+          分镜视频由 Agnes 多模态接口生成。下方说明系统如何把脚本、资产与顶栏参数组装成请求，以及漫剧分集脚本写法（详见{' '}
           <code>docs/EPISODE_RULES.md</code>）。
         </p>
 
-        <div className="pf-help-tabs" role="tablist" aria-label="Seedance 规则分类">
+        <div className="pf-help-tabs" role="tablist" aria-label="Agnes 规则分类">
           <button
             type="button"
             role="tab"
@@ -79,7 +79,7 @@ export function SeedanceRulesModal({ open, onClose }: Props) {
             <h4>顶栏参数 → API 字段</h4>
             <ul className="seedance-rules-list">
               <li>
-                <strong>模型</strong> → <code>model</code>（Seedance 2.5 / 1.5）
+                <strong>模型</strong> → <code>model</code>（Agnes 2.5 / 1.5）
               </li>
               <li>
                 <strong>画幅 · 清晰度</strong>（分集顶栏设置）→ <code>ratio</code>、<code>resolution</code>
@@ -108,7 +108,7 @@ export function SeedanceRulesModal({ open, onClose }: Props) {
               */}
             </ol>
             <p className="seedance-rules-note">
-              系统默认开启 <code>generate_audio</code>：有口播意图时 Seedance 原生配音并烧录字幕；纯画面镜仅环境音、不烧字幕。
+              系统默认开启 <code>generate_audio</code>：有口播意图时 Agnes 原生配音并烧录字幕；纯画面镜仅环境音、不烧字幕。
             </p>
 
             <h4>提示词自动组装顺序</h4>
@@ -150,7 +150,7 @@ export function SeedanceRulesModal({ open, onClose }: Props) {
                 <code>@asset:123</code>：在正文中引用 ID 为 123 的角色 / 场景 / 道具
               </li>
               <li>左侧资产面板点击资产，或本镜「参与资产」条，也会自动写入引用</li>
-              <li>被引用的角色需有参考图；口播由 Seedance 按对白/旁白自行发挥，无需绑定音色</li>
+              <li>被引用的角色需有参考图；口播由 Agnes 按对白/旁白自行发挥，无需绑定音色</li>
             </ul>
 
             <h4>漫剧常用 cue（勿用科普版「全程旁白烧录」字幕句）</h4>
@@ -204,7 +204,7 @@ export function SeedanceRulesModal({ open, onClose }: Props) {
 
             <h4>队列与并行</h4>
             <ul className="seedance-rules-list">
-              <li>分镜视频走独立 video 队列，Seedance 最多 10 路并行</li>
+              <li>分镜视频走独立 video 队列，Agnes 最多 10 路并行</li>
               <li>某一镜生成中时，仍可编辑其他镜脚本、预览已完成的视频</li>
               <li>「一键生成」会为本集各镜依次入队；单镜「生成」仅提交当前镜</li>
             </ul>
@@ -217,7 +217,7 @@ export function SeedanceRulesModal({ open, onClose }: Props) {
               </li>
               <li>
                 分集顶栏「镜间衔接」开启时：若本镜有角色/场景参考图或音色，
-                尾帧以 <code>reference_image</code> 附在末尾（Seedance 禁止与 <code>first_frame</code> 混用）；
+                尾帧以 <code>reference_image</code> 附在末尾（Agnes 禁止与 <code>first_frame</code> 混用）；
                 无参考媒体时才用 <code>first_frame</code>
               </li>
               <li>
@@ -225,10 +225,10 @@ export function SeedanceRulesModal({ open, onClose }: Props) {
               </li>
             </ul>
 
-            <h4>Agnes 引擎适配</h4>
+            <h4>音色与参考音频（暂关）</h4>
             <ul className="seedance-rules-list">
-              <li>顶栏模型路由到 Agnes（agnes-video-2.5-flash）时：提交 payload 仅含 提示词 + 参考图（最多 5 张）+ 时长 / 画幅，不含音频参数——不提交 reference_audio、不绑定角色 / 旁白音色，成片配音与字幕由视频模型自行输出；单条时长钳制 4–12s，成片固定 720P</li>
-              <li>缺少参考图时，系统会先自动补图再提交（补图失败则降级为纯提示词生成）</li>
+              <li>暂不提交 reference_audio、不绑定角色/旁白试听；口播由 Agnes 原生配音自行发挥</li>
+              <li>缺少参考图时，系统会尝试自动补图后再提交 Agnes</li>
             </ul>
 
             <h4>AI 重新分镜</h4>

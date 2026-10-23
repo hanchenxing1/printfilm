@@ -5,6 +5,7 @@ import type { DramaFragment } from '../../api/drama'
 import { DramaSubtitleBoard } from '../../components/drama/DramaSubtitleBoard'
 import { DramaFragmentSegmentedVideoPlayer } from '../../components/drama/DramaFragmentSegmentedVideoPlayer'
 import { triggerBlobDownload } from '../../lib/clientDownload'
+import { resolveDramaMediaUrl } from '../../api/drama'
 import {
   composeEpisodeVideoClient,
   episodeComposeFilename,
@@ -29,6 +30,8 @@ type Props = {
   previewLabel?: string
   onClearPreview?: () => void
   onActivatePreview?: () => void
+  /** 自动合成结果（episode.params.compose）：done 时展示成片播放/下载横幅 */
+  composeInfo?: { status?: string; url?: string; error?: string | null } | null
 }
 
 /** 把合成进度转成按钮文案 */
@@ -55,6 +58,7 @@ export function EpisodeEditSidePane({
   previewLabel = '',
   onClearPreview,
   onActivatePreview,
+  composeInfo,
 }: Props) {
   const hasSelection = playingFragmentId !== null
   /*
@@ -126,6 +130,34 @@ export function EpisodeEditSidePane({
         </button>
       </div>
       {composeError ? <p className="drama-ep-compose-error drama-ep-compose-error--header">{composeError}</p> : null}
+
+      {composeInfo?.status === "done" && composeInfo.url ? (
+        <div className="drama-ep-compose-auto">
+          <div className="drama-ep-compose-auto-head">
+            <span>全片已自动合成</span>
+            <a href={resolveDramaMediaUrl(composeInfo.url)} target="_blank" rel="noreferrer">
+              新窗口播放
+            </a>
+            <a
+              className="drama-ep-compose-auto-dl"
+              href={resolveDramaMediaUrl(composeInfo.url)}
+              download={episodeComposeFilename(episodeName)}
+            >
+              下载成片
+            </a>
+          </div>
+          <video
+            className="drama-ep-compose-auto-video"
+            src={resolveDramaMediaUrl(composeInfo.url)}
+            controls
+            playsInline
+            preload="metadata"
+          />
+        </div>
+      ) : null}
+      {composeInfo?.status === "failed" ? (
+        <p className="drama-ep-compose-error">{composeInfo.error || "自动合成失败，可手动点「全片合成下载」"}</p>
+      ) : null}
 
       {previewVideoUrl ? (
         <div className="drama-ep-preview-banner">

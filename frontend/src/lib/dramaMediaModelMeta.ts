@@ -27,7 +27,7 @@ export function mediaModelIconKind(modelId: string | undefined | null): MediaMod
 export function mediaModelCapabilityBadge(model: MediaModelOption): string {
   const id = (model.id || '').toLowerCase()
   if (id.includes('minimax')) return 'MiniMax'
-  if (id.includes('seedance')) return 'Seedance'
+  if (id.includes('seedance')) return 'Agnes'
   if (id.includes('seedream')) return 'Seedream'
   if (id.includes('gpt-image')) return 'GPT Image'
   return model.provider === 'tokenfree' ? 'TokenFree' : model.provider || '模型'

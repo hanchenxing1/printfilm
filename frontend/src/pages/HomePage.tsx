@@ -196,9 +196,6 @@ export default function HomePage() {
             {t('home.startCreate')}
             <ArrowRight size={16} strokeWidth={2} aria-hidden />
           </Button>
-          <Button variant="ghost" size="lg" to="/pricing">
-            {t('home.viewPricing')}
-          </Button>
         </div>
       </section>
 
@@ -212,7 +209,6 @@ export default function HomePage() {
           <Link to="/history">{t('nav.kepu')}</Link>
           <Link to="/method">{t('home.methodLink')}</Link>
           <Link to="/tools">{t('nav.tools')}</Link>
-          <Link to="/pricing">{t('nav.pricing')}</Link>
           <Link to="/help">{t('nav.help')}</Link>
           <Link to="/terms">{t('footer.terms')}</Link>
           <Link to="/privacy">{t('footer.privacy')}</Link>

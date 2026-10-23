@@ -1,18 +1,12 @@
 import { dialog } from './dialog'
 
-export const PRICING_PATH = '/pricing'
 
 /** 是否为余额不足 / 计费拦截类错误 */
 export function isBillingError(message: string) {
   return /余额不足|请先充值|402|insufficient_balance/i.test(message)
 }
 
-/** 跳转定价页充值 */
-export function goToTopup() {
-  if (typeof window !== 'undefined') {
-    window.location.assign(PRICING_PATH)
-  }
-}
+/** 本地版未启用计费：余额类错误不再引导充值 */
 
 /**
  * 弹出余额不足提示；若用户选择去充值则跳转定价页。
@@ -24,17 +18,13 @@ export async function handleBillingError(
 ): Promise<boolean> {
   const message = err instanceof Error ? err.message : String(err || '')
   if (!isBillingError(message)) return false
-  const go = await dialog.confirm({
-    title: '余额不足',
-    message: message || '当前余额不足以开始生成，请先充值。',
-    confirmText: '去充值',
-    cancelText: '知道了',
-    tone: 'danger',
+  // 本地版不计费，原样提示即可（navigate 参数保留兼容）
+  void navigate
+  await dialog.alert({
+    title: '提示',
+    message: message || '本次生成未成功，请重试。',
+    confirmText: '知道了',
   })
-  if (go) {
-    if (navigate) navigate(PRICING_PATH)
-    else goToTopup()
-  }
   return true
 }
 
